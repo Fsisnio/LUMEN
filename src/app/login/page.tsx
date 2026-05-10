@@ -11,6 +11,9 @@ import { AuthBrandMark, PlatformAdvantagesPanel } from "@/components/auth/Platfo
 const inputClass =
   "w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm shadow-sm transition placeholder:text-gray-400 focus:border-[var(--accent-dark)] focus:outline-none focus:ring-4 focus:ring-[var(--accent)]/12";
 
+/** Hidden on production builds (`npm run build` / Render) — avoid exposing demo credentials. */
+const showDemoAccounts = process.env.NODE_ENV !== "production";
+
 function LoginFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center auth-form-surface">
@@ -141,29 +144,31 @@ function LoginPageInner() {
               </p>
             </form>
 
-            <div className="mt-8 rounded-2xl border border-dashed border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-[#faf9f6] px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-900/70">
-                {t("auth.demoLabel")}
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-gray-600">{t("auth.demoHint")}</p>
-              <ul className="mt-3 space-y-2 font-mono text-[11px] leading-snug text-gray-800 sm:text-xs">
-                <li className="flex flex-wrap gap-x-1 gap-y-1">
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-senegal.org</span>
-                  <span className="text-gray-400">·</span>
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
-                </li>
-                <li className="flex flex-wrap gap-x-1 gap-y-1">
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-mali.org</span>
-                  <span className="text-gray-400">·</span>
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
-                </li>
-                <li className="flex flex-wrap gap-x-1 gap-y-1">
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-bf.org</span>
-                  <span className="text-gray-400">·</span>
-                  <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
-                </li>
-              </ul>
-            </div>
+            {showDemoAccounts ? (
+              <div className="mt-8 rounded-2xl border border-dashed border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-[#faf9f6] px-5 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-900/70">
+                  {t("auth.demoLabel")}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-gray-600">{t("auth.demoHint")}</p>
+                <ul className="mt-3 space-y-2 font-mono text-[11px] leading-snug text-gray-800 sm:text-xs">
+                  <li className="flex flex-wrap gap-x-1 gap-y-1">
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-senegal.org</span>
+                    <span className="text-gray-400">·</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                  </li>
+                  <li className="flex flex-wrap gap-x-1 gap-y-1">
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-mali.org</span>
+                    <span className="text-gray-400">·</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                  </li>
+                  <li className="flex flex-wrap gap-x-1 gap-y-1">
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-bf.org</span>
+                    <span className="text-gray-400">·</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                  </li>
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       </main>
