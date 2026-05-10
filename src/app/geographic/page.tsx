@@ -71,7 +71,7 @@ function GeographicPageInner() {
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-[var(--navy)]">
-              Caritas Sénégal — Project Locations
+              Collaborative Sénégal — Project Locations
             </h2>
             <div className="flex flex-wrap justify-end gap-2">
               {Object.entries(regionStats).map(([region, data]) => (

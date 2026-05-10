@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import type { PublicUser, Session, User } from "./types";
@@ -9,34 +9,10 @@ import {
   getUserById,
 } from "./data-store";
 
+export { hashPassword, verifyPassword } from "./password-crypto";
+
 export const SESSION_COOKIE = "lumen-session";
 const SESSION_DAYS = 30;
-
-const SCRYPT_KEY_LENGTH = 64;
-
-/**
- * Hash a plaintext password with a fresh random salt. Stored format is
- * `salt:hash` (both hex). scrypt is intentionally CPU-bound to slow brute force.
- */
-export function hashPassword(plain: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(plain, salt, SCRYPT_KEY_LENGTH).toString("hex");
-  return `${salt}:${hash}`;
-}
-
-export function verifyPassword(plain: string, stored: string): boolean {
-  const [salt, hash] = stored.split(":");
-  if (!salt || !hash) return false;
-  let candidate: Buffer;
-  try {
-    candidate = scryptSync(plain, salt, SCRYPT_KEY_LENGTH);
-  } catch {
-    return false;
-  }
-  const reference = Buffer.from(hash, "hex");
-  if (candidate.length !== reference.length) return false;
-  return timingSafeEqual(candidate, reference);
-}
 
 export function newSessionToken(): string {
   return randomBytes(32).toString("hex");

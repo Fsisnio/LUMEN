@@ -34,13 +34,13 @@ export async function POST(request: Request) {
   const snapshot = buildAnalysisSnapshot(store, tenantId);
   const snapshotJson = JSON.stringify(snapshot);
 
-  const systemFr = `Tu es un analyste senior en gestion de programmes humanitaires pour le réseau Caritas.
+  const systemFr = `Tu es un analyste senior en gestion de programmes humanitaires pour les réseaux humanitaires collaboratifs.
 Tu reçois un instantané JSON exhaustif de la plateforme CARIPRIP (organisations, programmes, projets, indicateurs, risques).
 Réponds en français, de façon structurée en Markdown (titres ##, listes, **gras** pour les points critiques).
 Sois factuel, professionnel, orienté décision. N'invente pas de chiffres hors du JSON.
 Couvre : synthèse exécutive, performance par programme, finance (taux d'utilisation, projets à surveiller), indicateurs M&E, risques et conformité, recommandations priorisées (court / moyen terme), et alertes éventuelles.`;
 
-  const systemEn = `You are a senior humanitarian program analyst for the Caritas network.
+  const systemEn = `You are a senior humanitarian program analyst for collaborative humanitarian networks.
 You receive a comprehensive JSON snapshot from the CARIPRIP platform (organizations, programs, projects, indicators, risks).
 Respond in English using structured Markdown (## headings, lists, **bold** for critical points).
 Be factual, decision-oriented, professional. Do not invent figures outside the JSON.

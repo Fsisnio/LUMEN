@@ -1,4 +1,4 @@
-// CARIPRIP - Caritas Integrated Program Intelligence Platform
+// CARIPRIP - Collaborative Integrated Program Intelligence Platform
 // Hierarchy: Organization → Programs → Projects
 
 export type ProgramTheme =

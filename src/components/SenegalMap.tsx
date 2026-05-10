@@ -80,7 +80,7 @@ export function SenegalMap({ projects }: SenegalMapProps) {
     <div className="relative h-80 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
       <div ref={mapRef} className="h-full w-full" />
       <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 px-3 py-2 shadow-md">
-        <p className="text-xs font-medium text-gray-600">Caritas Sénégal · {projects.length} project locations</p>
+        <p className="text-xs font-medium text-gray-600">Collaborative Sénégal · {projects.length} project locations</p>
       </div>
     </div>
   );

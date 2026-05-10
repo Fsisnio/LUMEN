@@ -1,8 +1,8 @@
 # Lumen — CARIPRIP
 
-**Caritas Integrated Program Intelligence Platform**
+**Collaborative Integrated Program Intelligence Platform**
 
-A program management intelligence system for faith-based humanitarian networks. Built for Caritas-type institutions with multi-country projects, multiple donors, diocesan partners, and strong accountability requirements.
+A program management intelligence system for faith-based humanitarian networks. Built for collaborative institutions with multi-country projects, multiple donors, diocesan partners, and strong accountability requirements.
 
 ## Structure
 

@@ -1,12 +1,12 @@
 import type { Organization, Program, Project, Indicator, BudgetLine, RiskItem } from "./types";
 
 export const organizations: Organization[] = [
-  { id: "org-1", name: "Caritas Sénégal (National Office)", type: "National Office", country: "Senegal", region: "Dakar" },
-  { id: "org-2", name: "Caritas Dakar", type: "Diocesan Branch", country: "Senegal", region: "Dakar", diocese: "Dakar" },
-  { id: "org-3", name: "Caritas Ziguinchor", type: "Diocesan Branch", country: "Senegal", region: "Ziguinchor", diocese: "Ziguinchor" },
-  { id: "org-4", name: "Caritas Saint-Louis", type: "Regional Coordination", country: "Senegal", region: "Saint-Louis" },
-  { id: "org-5", name: "Caritas Mali (National Office)", type: "National Office", country: "Mali", region: "Bamako" },
-  { id: "org-6", name: "Caritas Burkina Faso (National Office)", type: "National Office", country: "Burkina Faso", region: "Ouagadougou" },
+  { id: "org-1", name: "Collaborative Sénégal (National Office)", type: "National Office", country: "Senegal", region: "Dakar" },
+  { id: "org-2", name: "Collaborative Dakar", type: "Diocesan Branch", country: "Senegal", region: "Dakar", diocese: "Dakar" },
+  { id: "org-3", name: "Collaborative Ziguinchor", type: "Diocesan Branch", country: "Senegal", region: "Ziguinchor", diocese: "Ziguinchor" },
+  { id: "org-4", name: "Collaborative Saint-Louis", type: "Regional Coordination", country: "Senegal", region: "Saint-Louis" },
+  { id: "org-5", name: "Collaborative Mali (National Office)", type: "National Office", country: "Mali", region: "Bamako" },
+  { id: "org-6", name: "Collaborative Burkina Faso (National Office)", type: "National Office", country: "Burkina Faso", region: "Ouagadougou" },
 ];
 
 export const programs: Program[] = [
@@ -27,7 +27,7 @@ export const projects: Project[] = [
   { id: "prj-3", code: "HN-2024-001", title: "Maternal Health Initiative", organizationId: "org-1", programId: "prog-2", donor: "EU", budget: 580000, spent: 420000, duration: { start: "2024-01", end: "2025-09" }, location: "Thiès", region: "Thiès", manager: "Dr. Amina Hassan", progress: 72, beneficiaries: 3400, status: "active", riskLevel: "medium", lat: 14.8, lng: -16.97 },
   { id: "prj-4", code: "ER-2024-001", title: "Flood Response 2024", organizationId: "org-1", programId: "prog-5", donor: "ECHO", budget: 890000, spent: 720000, duration: { start: "2024-04", end: "2024-12" }, location: "Saint-Louis", region: "Saint-Louis", manager: "Peter Ochieng", progress: 85, beneficiaries: 18500, status: "active", riskLevel: "high", lat: 16.0, lng: -16.5 },
   { id: "prj-5", code: "ED-2024-001", title: "Vocational Training Centers", organizationId: "org-1", programId: "prog-3", donor: "USAID", budget: 420000, spent: 180000, duration: { start: "2024-06", end: "2026-05" }, location: "Thiès", region: "Thiès", manager: "Grace Mwangi", progress: 28, beneficiaries: 1200, status: "active", riskLevel: "low", lat: 14.75, lng: -16.95 },
-  { id: "prj-6", code: "LV-2024-001", title: "Microfinance for Women", organizationId: "org-1", programId: "prog-4", donor: "Caritas Internationalis", budget: 380000, spent: 290000, duration: { start: "2024-02", end: "2025-08" }, location: "Ziguinchor", region: "Ziguinchor", manager: "Fatima Abdi", progress: 68, beneficiaries: 2100, status: "active", riskLevel: "medium", lat: 12.58, lng: -16.27 },
+  { id: "prj-6", code: "LV-2024-001", title: "Microfinance for Women", organizationId: "org-1", programId: "prog-4", donor: "Collaborative International", budget: 380000, spent: 290000, duration: { start: "2024-02", end: "2025-08" }, location: "Ziguinchor", region: "Ziguinchor", manager: "Fatima Abdi", progress: 68, beneficiaries: 2100, status: "active", riskLevel: "medium", lat: 12.58, lng: -16.27 },
   { id: "prj-7", code: "ER-2024-002", title: "Drought Relief Package", organizationId: "org-1", programId: "prog-5", donor: "DFID", budget: 650000, spent: 410000, duration: { start: "2024-05", end: "2025-03" }, location: "Kolda", region: "Kolda", manager: "David Mutua", progress: 55, beneficiaries: 9800, status: "active", riskLevel: "high", lat: 12.88, lng: -14.95 },
   { id: "prj-8", code: "CR-2024-001", title: "Climate-Smart Agriculture", organizationId: "org-1", programId: "prog-7", donor: "Green Climate Fund", budget: 540000, spent: 210000, duration: { start: "2024-07", end: "2026-06" }, location: "Fatick", region: "Fatick", manager: "James Otieno", progress: 25, beneficiaries: 4500, status: "active", riskLevel: "medium", lat: 14.33, lng: -16.4 },
   { id: "prj-mali-1", code: "FS-ML-2024-001", title: "Sahel Cereal Banks", organizationId: "org-5", programId: "prog-mali-1", donor: "WFP", budget: 480000, spent: 260000, duration: { start: "2024-02", end: "2025-08" }, location: "Mopti", region: "Mopti", manager: "Aïssata Touré", progress: 54, beneficiaries: 7200, status: "active", riskLevel: "medium" },

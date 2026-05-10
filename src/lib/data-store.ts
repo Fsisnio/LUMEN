@@ -46,6 +46,7 @@ import {
   mongoGetFullStore,
   mongoGetUserById,
   mongoGetUserByEmail,
+  mongoListUsersByOrganization,
   mongoCreateUser,
   mongoUpdateUser,
   mongoCreateSession,
@@ -462,6 +463,13 @@ export async function getFullStore(tenantId?: string | null): Promise<Omit<DataS
     budgetLines: scoped(store.budgetLines, tenantId),
     risks: scoped(store.risks, tenantId),
   };
+}
+
+/** All users belonging to an organization (includes password hashes — server-only). */
+export async function listUsersByOrganization(organizationId: string): Promise<User[]> {
+  if (useMongoBackend()) return mongoListUsersByOrganization(organizationId);
+  const store = await loadFileStore();
+  return store.users.filter((u) => u.organizationId === organizationId);
 }
 
 export async function getUserById(id: string): Promise<User | null> {

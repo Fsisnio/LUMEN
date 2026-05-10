@@ -19,7 +19,7 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Lumen | CARIPRIP - Caritas Integrated Program Intelligence Platform",
+  title: "Lumen | CARIPRIP - Collaborative Integrated Program Intelligence Platform",
   description: "Program management intelligence for faith-based humanitarian networks",
 };
 

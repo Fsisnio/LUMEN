@@ -6,14 +6,14 @@ import {
   getUserByEmail,
 } from "@/lib/data-store";
 import { hashPassword, publicUser, startSession } from "@/lib/auth";
-import type { Organization, UserRole } from "@/lib/types";
+import type { Organization } from "@/lib/types";
+import { ORG_ADMIN_ROLE } from "@/lib/org-permissions";
 
 interface SignupBody {
   user: {
     name: string;
     email: string;
     password: string;
-    role?: UserRole;
   };
   organization: Omit<Organization, "id">;
 }
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     name: u.name.trim(),
     email: u.email.trim().toLowerCase(),
     organizationId: organization.id,
-    role: u.role ?? "Executive Director",
+    role: ORG_ADMIN_ROLE,
     passwordHash: hashPassword(u.password),
   });
 

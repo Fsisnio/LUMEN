@@ -146,19 +146,19 @@ export function LoginPageClient({ showDemoAccounts }: LoginPageClientProps) {
                 <p className="mt-2 text-xs leading-relaxed text-gray-600">{t("auth.demoHint")}</p>
                 <ul className="mt-3 space-y-2 font-mono text-[11px] leading-snug text-gray-800 sm:text-xs">
                   <li className="flex flex-wrap gap-x-1 gap-y-1">
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-senegal.org</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@collaborative-senegal.org</span>
                     <span className="text-gray-400">·</span>
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">collaborative123</span>
                   </li>
                   <li className="flex flex-wrap gap-x-1 gap-y-1">
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-mali.org</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@collaborative-mali.org</span>
                     <span className="text-gray-400">·</span>
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">collaborative123</span>
                   </li>
                   <li className="flex flex-wrap gap-x-1 gap-y-1">
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@caritas-bf.org</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">admin@collaborative-bf.org</span>
                     <span className="text-gray-400">·</span>
-                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">caritas123</span>
+                    <span className="rounded bg-white/80 px-1.5 py-0.5 ring-1 ring-amber-100">collaborative123</span>
                   </li>
                 </ul>
               </div>

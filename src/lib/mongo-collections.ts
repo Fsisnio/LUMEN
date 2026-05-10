@@ -1,7 +1,8 @@
 import type { Db } from "mongodb";
 import { mongoDb } from "./mongo-connection";
 import type { DataStore } from "./app-store-schema";
-import { getDefaultStore, migrateStoreInPlace } from "./app-store-schema";
+import { getDefaultStore, migrateStoreInPlace, DEMO_ADMINS } from "./app-store-schema";
+import { hashPassword, verifyPassword } from "./password-crypto";
 import type {
   Organization,
   Program,
@@ -96,6 +97,53 @@ async function bootstrapMongo(): Promise<void> {
 
   await migrateLegacySnapshotIfAny(db);
   await seedIfOrganizationsEmpty(db);
+  await syncDemoAdminsMongo(db);
+}
+
+/** Align Mongo demo admins with code (handles @caritas-* → @collaborative-* and rotated passwords). */
+async function syncDemoAdminsMongo(db: Db): Promise<void> {
+  const usersCol = db.collection<MongoStrDoc>(C.users);
+
+  for (const demo of DEMO_ADMINS) {
+    const orgExists = await db.collection<MongoStrDoc>(C.organizations).findOne({ _id: demo.orgId });
+    if (!orgExists) continue;
+
+    const canonicalId = `usr-${demo.orgId}`;
+    const legacyEmail = demo.email.replace("collaborative", "caritas").toLowerCase();
+    const demoEmail = demo.email.toLowerCase();
+
+    let raw =
+      (await usersCol.findOne({ _id: canonicalId })) ??
+      (await usersCol.findOne({ email: demoEmail })) ??
+      (await usersCol.findOne({ email: legacyEmail }));
+
+    if (!raw) continue;
+
+    const u = docToEntity<User>(raw as Record<string, unknown>);
+    const emailOk = u.email.toLowerCase() === demoEmail;
+    const passOk = verifyPassword(demo.password, u.passwordHash);
+    const orgOk = u.organizationId === demo.orgId;
+    const idOk = u.id === canonicalId;
+
+    if (emailOk && passOk && orgOk && idOk) continue;
+
+    await usersCol.deleteMany({ email: demoEmail, _id: { $ne: u.id } });
+
+    const next: User = {
+      ...u,
+      id: canonicalId,
+      email: demo.email.trim().toLowerCase(),
+      organizationId: demo.orgId,
+      passwordHash: hashPassword(demo.password),
+    };
+
+    if (u.id !== canonicalId) {
+      await usersCol.deleteMany({ _id: { $in: [canonicalId, u.id] } });
+      await usersCol.insertOne(entityToDoc(next));
+    } else {
+      await usersCol.replaceOne({ _id: canonicalId }, entityToDoc(next));
+    }
+  }
 }
 
 type LegacySnapshot = DataStore & { _id: typeof LEGACY_SNAPSHOT_ID };
@@ -559,6 +607,15 @@ export async function mongoGetUserByEmail(email: string): Promise<User | null> {
     .collection<MongoStrDoc>(C.users)
     .findOne({ email: email.trim().toLowerCase() });
   return d ? docToEntity<User>(d as Record<string, unknown>) : null;
+}
+
+export async function mongoListUsersByOrganization(organizationId: string): Promise<User[]> {
+  await ensureMongoReady();
+  const docs = await (await mongoDb())
+    .collection<MongoStrDoc>(C.users)
+    .find({ organizationId })
+    .toArray();
+  return docs.map((d) => docToEntity<User>(d as Record<string, unknown>));
 }
 
 export async function mongoCreateUser(data: Omit<User, "id" | "createdAt">): Promise<User> {

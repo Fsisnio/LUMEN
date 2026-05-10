@@ -7,7 +7,7 @@ import {
   budgetLines as defaultBudgetLines,
   risks as defaultRisks,
 } from "./mock-data";
-import { randomBytes, scryptSync } from "node:crypto";
+import { hashPassword, verifyPassword } from "./password-crypto";
 
 export interface DataStore {
   organizations: Organization[];
@@ -21,9 +21,7 @@ export interface DataStore {
 }
 
 export function seedHash(plain: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(plain, salt, 64).toString("hex");
-  return `${salt}:${hash}`;
+  return hashPassword(plain);
 }
 
 export function getDefaultStore(): DataStore {
@@ -40,10 +38,54 @@ export function getDefaultStore(): DataStore {
 }
 
 export const DEMO_ADMINS: { email: string; name: string; password: string; orgId: string }[] = [
-  { email: "admin@caritas-senegal.org", name: "Demo Admin (Sénégal)", password: "caritas123", orgId: "org-1" },
-  { email: "admin@caritas-mali.org", name: "Demo Admin (Mali)", password: "caritas123", orgId: "org-5" },
-  { email: "admin@caritas-bf.org", name: "Demo Admin (Burkina Faso)", password: "caritas123", orgId: "org-6" },
+  { email: "admin@collaborative-senegal.org", name: "Demo Admin (Sénégal)", password: "collaborative123", orgId: "org-1" },
+  { email: "admin@collaborative-mali.org", name: "Demo Admin (Mali)", password: "collaborative123", orgId: "org-5" },
+  { email: "admin@collaborative-bf.org", name: "Demo Admin (Burkina Faso)", password: "collaborative123", orgId: "org-6" },
 ];
+
+/**
+ * Ensure the three canonical demo admins match current `DEMO_ADMINS`
+ * (fixes legacy @caritas-* emails and hashes after renames / password changes).
+ */
+export function syncDemoAdminUsersInPlace(store: DataStore): boolean {
+  let changed = false;
+  const orgIds = new Set(store.organizations.map((o) => o.id));
+
+  for (const demo of DEMO_ADMINS) {
+    if (!orgIds.has(demo.orgId)) continue;
+    const canonicalId = `usr-${demo.orgId}`;
+    const legacyEmail = demo.email.replace("collaborative", "caritas").toLowerCase();
+    const demoEmail = demo.email.toLowerCase();
+
+    let u =
+      store.users.find((x) => x.id === canonicalId) ??
+      store.users.find((x) => {
+        const e = x.email.toLowerCase();
+        return e === demoEmail || e === legacyEmail;
+      });
+
+    if (!u) continue;
+
+    if (u.id !== canonicalId) {
+      store.users = store.users.filter((x) => x.id !== canonicalId || x === u);
+      u.id = canonicalId;
+      changed = true;
+    }
+
+    const emailOk = u.email.toLowerCase() === demoEmail;
+    const passOk = verifyPassword(demo.password, u.passwordHash);
+    const orgOk = u.organizationId === demo.orgId;
+
+    if (!emailOk || !passOk || !orgOk) {
+      u.email = demo.email;
+      u.passwordHash = hashPassword(demo.password);
+      u.organizationId = demo.orgId;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
 
 /**
  * Backfill `organizationId` and `country` on legacy stores. Idempotent.
@@ -123,6 +165,10 @@ export function migrateStoreInPlace(store: DataStore): { changed: boolean } {
       });
       changed = true;
     }
+  }
+
+  if (syncDemoAdminUsersInPlace(store)) {
+    changed = true;
   }
 
   return { changed };
