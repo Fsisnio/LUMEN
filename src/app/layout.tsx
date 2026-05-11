@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/contexts/LocaleContext";
@@ -23,6 +24,8 @@ export const metadata: Metadata = {
   description: "Program management intelligence for faith-based humanitarian networks",
 };
 
+const GA_MEASUREMENT_ID = "G-G3FBPTPLCK";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +34,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${sourceSans.variable}`}>
       <body className="min-h-screen antialiased font-sans">
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <LocaleProvider>
           <AuthProvider>
             <TenantProvider>
