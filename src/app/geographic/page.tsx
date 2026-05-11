@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { useData } from "@/hooks/use-data";
 import { useLocale } from "@/contexts/LocaleContext";
 import { TenantGate } from "@/components/TenantGate";
@@ -9,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 import { ProjectWorldMap } from "@/components/ProjectWorldMap";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Project, RiskLevel } from "@/lib/types";
+import { canUseAdvancedGeoFilters } from "@/lib/subscription-quota";
 
 const PROJECT_STATUSES: Project["status"][] = ["active", "completed", "delayed", "planning"];
 const RISK_LEVELS: RiskLevel[] = ["low", "medium", "high", "critical"];
@@ -91,7 +93,19 @@ function GeographicPageInner() {
     return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" }));
   }, [projects]);
 
-  const filteredProjects = useMemo(() => filterProjects(projects, filters), [projects, filters]);
+  const advancedGeo = canUseAdvancedGeoFilters(tenant);
+  const effectiveFilters = useMemo((): GeoFilters => {
+    if (advancedGeo) return filters;
+    return {
+      ...filters,
+      query: "",
+      status: "",
+      riskLevel: "",
+      onlyMapped: false,
+    };
+  }, [advancedGeo, filters]);
+
+  const filteredProjects = useMemo(() => filterProjects(projects, effectiveFilters), [projects, effectiveFilters]);
 
   const regionStats = filteredProjects.reduce(
     (acc, p) => {
@@ -167,6 +181,18 @@ function GeographicPageInner() {
             </button>
           </div>
 
+          {!advancedGeo ? (
+            <div className="mb-4 flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+              <span>{t("geographic.advancedLocked")}</span>
+              <Link
+                href="/plans"
+                className="inline-flex shrink-0 font-semibold text-amber-900 underline-offset-4 hover:underline"
+              >
+                {t("geographic.viewPlansGeo")}
+              </Link>
+            </div>
+          ) : null}
+
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="md:col-span-2 xl:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-600">{t("geographic.filterSearch")}</label>
@@ -174,6 +200,7 @@ function GeographicPageInner() {
                 type="search"
                 className={inputClass}
                 value={filters.query}
+                disabled={!advancedGeo}
                 onChange={(e) => setFilters((prev) => ({ ...prev, query: e.target.value }))}
                 placeholder={t("geographic.filterSearchPlaceholder")}
               />
@@ -213,6 +240,7 @@ function GeographicPageInner() {
               <select
                 className={selectClass}
                 value={filters.status}
+                disabled={!advancedGeo}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, status: e.target.value as GeoFilters["status"] }))
                 }
@@ -230,6 +258,7 @@ function GeographicPageInner() {
               <select
                 className={selectClass}
                 value={filters.riskLevel}
+                disabled={!advancedGeo}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, riskLevel: e.target.value as GeoFilters["riskLevel"] }))
                 }
@@ -244,10 +273,11 @@ function GeographicPageInner() {
             </div>
           </div>
 
-          <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+          <label className={`mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-700 ${advancedGeo ? "" : "cursor-not-allowed opacity-55"}`}>
             <input
               type="checkbox"
               checked={filters.onlyMapped}
+              disabled={!advancedGeo}
               onChange={(e) => setFilters((prev) => ({ ...prev, onlyMapped: e.target.checked }))}
               className="h-4 w-4 rounded border-[var(--border)] text-[var(--accent-dark)] focus:ring-[var(--accent)]"
             />

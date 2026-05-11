@@ -310,7 +310,13 @@ export async function updateOrganization(
   const store = await loadFileStore();
   const idx = store.organizations.findIndex((o) => o.id === id);
   if (idx === -1) return null;
-  store.organizations[idx] = { ...store.organizations[idx], ...data };
+  const merged = { ...store.organizations[idx], ...data };
+  for (const k of Object.keys(data) as (keyof Organization)[]) {
+    if (data[k] === undefined) {
+      delete (merged as Record<string, unknown>)[k as string];
+    }
+  }
+  store.organizations[idx] = { ...merged, id };
   await saveFileStore(store);
   return store.organizations[idx];
 }

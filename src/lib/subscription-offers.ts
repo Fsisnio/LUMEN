@@ -1,6 +1,56 @@
 /** Commercial offer tiers (display + future billing enforcement). Prices in USD unless noted. */
 export type OfferTierId = "free" | "day_pass" | "week_pass" | "month_pass";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const PAID_USD: Record<Exclude<OfferTierId, "free">, number> = {
+  day_pass: 3,
+  week_pass: 5,
+  month_pass: 15,
+};
+
+export function tierRank(id: OfferTierId): number {
+  switch (id) {
+    case "free":
+      return 0;
+    case "day_pass":
+      return 1;
+    case "week_pass":
+      return 2;
+    case "month_pass":
+      return 3;
+  }
+}
+
+export function tierFromRank(rank: number): OfferTierId {
+  if (rank >= 3) return "month_pass";
+  if (rank >= 2) return "week_pass";
+  if (rank >= 1) return "day_pass";
+  return "free";
+}
+
+export function paidTierDurationMs(id: Exclude<OfferTierId, "free">): number {
+  switch (id) {
+    case "day_pass":
+      return DAY_MS;
+    case "week_pass":
+      return 7 * DAY_MS;
+    case "month_pass":
+      return 30 * DAY_MS;
+  }
+}
+
+/**
+ * PayDunya invoices are in CFA (XOF). We convert from the published USD list
+ * price using `PAYDUNYA_XOF_PER_USD` (default 610).
+ */
+export function paydunyaListedAmountCfa(id: Exclude<OfferTierId, "free">): number {
+  const rate = Number(process.env.PAYDUNYA_XOF_PER_USD ?? 610);
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 610;
+  const rounded = Math.round(PAID_USD[id] * safeRate);
+  return Math.max(rounded, 150);
+}
+
 export interface SubscriptionOfferDef {
   id: OfferTierId;
   /** Highlight this card in the UI */
@@ -86,4 +136,9 @@ export const SUBSCRIPTION_OFFERS: SubscriptionOfferDef[] = [
       ],
     },
   },
-].sort((a, b) => a.order - b.order);
+].sort((a, b) => a.order - b.order) as SubscriptionOfferDef[];
+
+export function parsePayableTier(raw: string): Exclude<OfferTierId, "free"> | null {
+  if (raw === "day_pass" || raw === "week_pass" || raw === "month_pass") return raw;
+  return null;
+}

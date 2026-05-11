@@ -20,6 +20,26 @@ export type UserRole =
 
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
+/** Paid Lumen plan tier; aligned with `OfferTierId` in subscription-offers. */
+export type SubscriptionTierId = "free" | "day_pass" | "week_pass" | "month_pass";
+
+export interface OrganizationSubscription {
+  tier: SubscriptionTierId;
+  /** ISO 8601; pass is active while this is in the future. */
+  paidUntil: string;
+}
+
+/** Usage counters enforced against `subscription.tier` + `paidUntil` (subscription-quota). */
+export interface OrganizationSubscriptionUsage {
+  entitlementSnapshot?: string;
+  freeAi?: { period: string; count: number };
+  paidAiDay?: { period: string; count: number };
+  passAiTotal?: number;
+  passReportTotal?: number;
+  reportWeek?: { period: string; count: number };
+  reportMonth?: { period: string; count: number };
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -28,6 +48,14 @@ export interface Organization {
   country: string;
   region?: string;
   diocese?: string;
+  /** Optional — set after PayDunya fulfills a pass purchase. */
+  subscription?: OrganizationSubscription;
+  /** Percent discount (0–100) applied to the next paid checkout after a Month pass. */
+  nextRenewalDiscountPct?: number;
+  /** Invoice tokens already fulfilled (idempotent IPN / return verification). */
+  paydunyaCompletedTokens?: string[];
+  /** AI / automated report quotas. */
+  subscriptionUsage?: OrganizationSubscriptionUsage;
 }
 
 export interface Program {

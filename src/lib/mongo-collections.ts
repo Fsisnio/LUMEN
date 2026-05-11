@@ -446,9 +446,15 @@ export async function mongoUpdateOrganization(id: string, data: Partial<Organiza
   const db = await mongoDb();
   const prev = await db.collection<MongoStrDoc>(C.organizations).findOne({ _id: id });
   if (!prev) return null;
-  const merged = { ...docToEntity<Organization>(prev as Record<string, unknown>), ...data, id };
-  await db.collection<MongoStrDoc>(C.organizations).replaceOne({ _id: id }, entityToDoc(merged));
-  return merged;
+  const merged = { ...docToEntity<Organization>(prev as Record<string, unknown>), ...data };
+  for (const k of Object.keys(data) as (keyof Organization)[]) {
+    if (data[k] === undefined) {
+      delete (merged as Record<string, unknown>)[k as string];
+    }
+  }
+  const nextOrg = { ...merged, id } as Organization;
+  await db.collection<MongoStrDoc>(C.organizations).replaceOne({ _id: id }, entityToDoc(nextOrg));
+  return nextOrg;
 }
 
 export async function mongoDeleteOrganization(
