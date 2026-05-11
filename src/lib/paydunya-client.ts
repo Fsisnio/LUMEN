@@ -17,6 +17,26 @@ export function readPaydunyaSecrets(): PaydunyaSecrets | null {
   return { masterKey, privateKey, token, mode };
 }
 
+/** Strip control chars; trim length for PayDunya text fields (names, emails, descriptions). */
+export function sanitizePaydunyaText(value: string, maxLen: number): string {
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, maxLen);
+}
+
+export function assertHttpsUrlsForLivePaydunya(mode: PaydunyaSecrets["mode"], urls: string[]): void {
+  if (mode !== "live") return;
+  for (const u of urls) {
+    const trimmed = typeof u === "string" ? u.trim() : "";
+    if (!trimmed || !/^https:\/\//i.test(trimmed)) {
+      throw new Error(
+        "PayDunya live requires HTTPS URLs and a public domain: set APP_BASE_URL=https://..."
+      );
+    }
+  }
+}
+
 function createUrl(secrets: PaydunyaSecrets, path: string): string {
   const prefix =
     secrets.mode === "live"
@@ -58,25 +78,52 @@ export async function createCheckoutInvoice(
   secrets: PaydunyaSecrets,
   args: CreateCheckoutArgs
 ): Promise<{ checkoutUrl: string; token: string }> {
+  const websiteUrl = appBaseUrl();
+  assertHttpsUrlsForLivePaydunya(secrets.mode, [
+    websiteUrl,
+    args.returnUrl,
+    args.cancelUrl,
+    args.callbackUrl,
+  ]);
+
+  const emailSan = sanitizePaydunyaText(args.customer.email, 254).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.\S+$/.test(emailSan)) {
+    throw new Error(
+      "PayDunya invoice requires a valid customer email — check the user profile in your database."
+    );
+  }
+  const email = emailSan;
+
+  let name = sanitizePaydunyaText(args.customer.name, 255);
+  if (!name) name = "Customer";
+
+  const desc = sanitizePaydunyaText(
+    args.description.replace(/\u2014/g, "-"),
+    500
+  );
+
+  const store: Record<string, string> = {
+    name: sanitizePaydunyaText(args.storeName, 255),
+    tagline: sanitizePaydunyaText(args.storeTagline ?? "", 500),
+    phone: "",
+    postal_address: "",
+    website_url: websiteUrl,
+  };
+  const logoUrl = process.env.PAYDUNYA_STORE_LOGO_URL?.trim();
+  if (logoUrl) store.logo_url = logoUrl.slice(0, 500);
+
   const body = {
     invoice: {
       total_amount: Math.round(args.totalAmountCfa),
-      description: args.description,
+      description: desc,
       customer: {
-        name: args.customer.name,
-        email: args.customer.email,
-        phone: args.customer.phone ?? "",
+        name,
+        email,
+        phone: sanitizePaydunyaText(args.customer.phone ?? "", 40),
       },
       custom_data: args.customData,
     },
-    store: {
-      name: args.storeName,
-      tagline: args.storeTagline ?? "",
-      phone: "",
-      postal_address: "",
-      logo_url: process.env.PAYDUNYA_STORE_LOGO_URL?.trim() ?? "",
-      website_url: appBaseUrl(),
-    },
+    store,
     actions: {
       return_url: args.returnUrl,
       cancel_url: args.cancelUrl,
@@ -91,12 +138,27 @@ export async function createCheckoutInvoice(
     body: JSON.stringify(body),
   });
 
-  const json = (await res.json()) as {
+  const raw = await res.text();
+  let json = {} as {
     response_code?: string;
     response_text?: string;
     token?: string;
     description?: string;
   };
+
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    throw new Error(
+      `PayDunya checkout-invoice/create returned non-JSON (HTTP ${res.status}): ${raw.slice(0, 200)}`
+    );
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      json.description ?? json.response_text ?? `PayDunya HTTP ${res.status}: invoice creation failed`
+    );
+  }
 
   if (json.response_code !== "00" || !json.response_text?.startsWith("http")) {
     throw new Error(json.response_text ?? json.description ?? "PayDunya invoice creation failed");

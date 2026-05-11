@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   try {
     const invoice = await createCheckoutInvoice(secrets, {
       totalAmountCfa: total,
-      description: `Lumen — ${tier.replace(/_/g, " ")}`,
+      description: `Lumen - ${tier.replace(/_/g, " ")}`,
       storeName: process.env.PAYDUNYA_STORE_NAME?.trim() || "Lumen",
       storeTagline: process.env.PAYDUNYA_STORE_TAGLINE?.trim() || "CARIPRIP program intelligence",
       customer: { name: user.name, email: user.email },
