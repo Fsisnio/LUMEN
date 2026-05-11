@@ -105,6 +105,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "common.delete": "Delete",
     "common.edit": "Edit",
     "common.add": "Add",
+    "footer.contact": "Contact:",
     "financial.title": "Financial Oversight",
     "financial.subtitle": "Budget vs Actual · Donor reporting · Fund utilization · Alerts",
     "geographic.title": "Geographic Overview",
@@ -207,6 +208,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "plans.payWithPaydunya": "Pay with PayDunya",
     "plans.checkoutBusy": "Opening PayDunya…",
     "plans.checkoutFail": "Could not start checkout.",
+    "plans.paydunyaCredMismatch":
+      "PayDunya refused the keys: use the three production keys from the same app (Master, Private, Token), set PAYDUNYA_MODE=live, and replace any test_private_ key. Sandbox keys only work with PAYDUNYA_MODE=test.",
+    "plans.paydunyaCheckoutFail": "PayDunya checkout failed. Check server logs and your PayDunya dashboard integration.",
     "plans.configMissingPaydunya":
       "PayDunya credentials missing — set PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY and PAYDUNYA_TOKEN.",
     "plans.activePass": "Active plan",
@@ -364,6 +368,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "common.delete": "Supprimer",
     "common.edit": "Modifier",
     "common.add": "Ajouter",
+    "footer.contact": "Contact :",
     "financial.title": "Suivi financier",
     "financial.subtitle": "Budget vs réel · Rapports donateurs · Utilisation des fonds · Alertes",
     "geographic.title": "Vue géographique",
@@ -468,6 +473,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "plans.payWithPaydunya": "Payer avec PayDunya",
     "plans.checkoutBusy": "Ouverture de PayDunya…",
     "plans.checkoutFail": "Impossible de démarrer le paiement.",
+    "plans.paydunyaCredMismatch":
+      "PayDunya a refusé les clés : utilisez les trois clés de production de la même application (Master, Private, Token), mettez PAYDUNYA_MODE=live, et remplacez toute clé test_private_. Les clés sandbox ne fonctionnent qu’avec PAYDUNYA_MODE=test.",
+    "plans.paydunyaCheckoutFail": "Échec PayDunya au checkout. Vérifiez les logs serveur et l’intégration dans votre espace PayDunya.",
     "plans.configMissingPaydunya":
       "Variables PayDunya manquantes — renseignez PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY et PAYDUNYA_TOKEN.",
     "plans.activePass": "Formule active",

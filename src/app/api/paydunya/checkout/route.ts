@@ -66,7 +66,10 @@ export async function POST(request: Request) {
   } catch (e) {
     console.error("[paydunya checkout]", e);
     const msg = e instanceof Error ? e.message : "checkout_failed";
-    return NextResponse.json({ error: msg }, { status: 502 });
+    const credLikely =
+      /private\s*key/i.test(msg) || /token combination/i.test(msg) || /^TEST\s/i.test(msg);
+    const errorKey = credLikely ? "plans.paydunyaCredMismatch" : "plans.paydunyaCheckoutFail";
+    return NextResponse.json({ error: msg, errorKey }, { status: 502 });
   }
 
   return NextResponse.json({ url: checkoutUrl });

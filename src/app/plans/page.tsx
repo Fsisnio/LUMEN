@@ -18,15 +18,6 @@ function hasActivePaidPass(org: Organization | null): boolean {
   return Date.parse(s.paidUntil) > Date.now();
 }
 
-async function safeReadError(res: Response): Promise<string> {
-  try {
-    const body = (await res.json()) as { error?: string };
-    return typeof body.error === "string" ? body.error : `HTTP ${res.status}`;
-  } catch {
-    return `HTTP ${res.status}`;
-  }
-}
-
 export default function PlansPage() {
   const { language, t } = useLocale();
   const { tenant, refresh } = useAuth();
@@ -64,14 +55,23 @@ export default function PlansPage() {
           credentials: "include",
           body: JSON.stringify({ tierId }),
         });
+        const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string; errorKey?: string };
+
         if (!res.ok) {
           if (res.status === 503) {
             setCheckoutError(t("plans.configMissingPaydunya"));
             return;
           }
-          throw new Error(await safeReadError(res));
+          if (typeof body.errorKey === "string" && body.errorKey.startsWith("plans.")) {
+            setCheckoutError(t(body.errorKey));
+            return;
+          }
+          const msg =
+            typeof body.error === "string" && body.error.trim() ? body.error : t("plans.checkoutFail");
+          setCheckoutError(msg);
+          return;
         }
-        const body = (await res.json()) as { url?: string };
+
         if (typeof body.url === "string" && body.url.startsWith("http")) {
           window.location.href = body.url;
           return;
