@@ -25,13 +25,14 @@ const QUOTA_I18N: Record<string, string> = {
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY ?? process.env.OPENAI_KEY;
   if (!apiKey?.trim()) {
-    return NextResponse.json(
-      {
-        error:
-          "Missing OPENAI_API_KEY (or OPENAI_KEY) in environment. Add it to .env.local.",
-      },
-      { status: 503 }
-    );
+    const payload =
+      process.env.NODE_ENV === "production"
+        ? { error: "analysis.aiUnavailablePublic" }
+        : {
+            error:
+              "Missing OPENAI_API_KEY (or OPENAI_KEY) in environment. Add it to .env.local.",
+          };
+    return NextResponse.json(payload, { status: 503 });
   }
 
   let language: LanguageCode = "fr";

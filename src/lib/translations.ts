@@ -21,6 +21,8 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "analysis.envHint": "OpenAI API key",
     "analysis.envDetail":
       "Set OPENAI_API_KEY (or OPENAI_KEY) in .env.local. Optionally set OPENAI_MODEL (default: gpt-4o-mini).",
+    "analysis.aiUnavailablePublic":
+      "AI analyses are unavailable right now. Please try again later or contact support.",
     "analysis.errorTitle": "Analysis failed",
     "analysis.modelLabel": "Model",
     "analysis.emptyTitle": "No analysis yet",
@@ -205,12 +207,16 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "plans.popular": "Popular",
     "plans.payCfAApprox":
       "The PayDunya page shows CFA; we convert USD list prices server-side (`PAYDUNYA_XOF_PER_USD`, default 610).",
+    "plans.payUnavailableUser":
+      "Paid checkout isn’t available right now — try again later or contact support if it continues.",
     "plans.payWithPaydunya": "Pay with PayDunya",
     "plans.checkoutBusy": "Opening PayDunya…",
     "plans.checkoutFail": "Could not start checkout.",
     "plans.paydunyaCredMismatch":
       "PayDunya refused the keys: use the three production keys from the same app (Master, Private, Token), set PAYDUNYA_MODE=live, and replace any test_private_ key. Sandbox keys only work with PAYDUNYA_MODE=test.",
     "plans.paydunyaCheckoutFail": "PayDunya checkout failed. Check server logs and your PayDunya dashboard integration.",
+    "plans.payFailedUser":
+      "We couldn’t open secure payment — try again in a moment or contact support.",
     "plans.configMissingPaydunya":
       "PayDunya credentials missing — set PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY and PAYDUNYA_TOKEN.",
     "plans.activePass": "Active plan",
@@ -282,8 +288,8 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "analysis.run": "Lancer l'analyse",
     "analysis.running": "Analyse en cours…",
     "analysis.envHint": "Clé API OpenAI",
-    "analysis.envDetail":
-      "Ajoutez OPENAI_API_KEY (ou OPENAI_KEY) dans .env.local. Optionnel : OPENAI_MODEL (défaut : gpt-4o-mini).",
+    "analysis.aiUnavailablePublic":
+      "Les analyses IA ne sont pas disponibles pour le moment. Réessayez plus tard ou contactez le support.",
     "analysis.errorTitle": "Échec de l'analyse",
     "analysis.modelLabel": "Modèle",
     "analysis.emptyTitle": "Pas encore d'analyse",
@@ -470,12 +476,16 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "plans.popular": "Populaire",
     "plans.payCfAApprox":
       "La page PayDunya montre les montants en CFA ; conversion depuis les prix USD listés (`PAYDUNYA_XOF_PER_USD`, défaut 610).",
+    "plans.payUnavailableUser":
+      "Le paiement en ligne n’est pas disponible pour l’instant — réessayez plus tard ou contactez le support.",
     "plans.payWithPaydunya": "Payer avec PayDunya",
     "plans.checkoutBusy": "Ouverture de PayDunya…",
     "plans.checkoutFail": "Impossible de démarrer le paiement.",
     "plans.paydunyaCredMismatch":
       "PayDunya a refusé les clés : utilisez les trois clés de production de la même application (Master, Private, Token), mettez PAYDUNYA_MODE=live, et remplacez toute clé test_private_. Les clés sandbox ne fonctionnent qu’avec PAYDUNYA_MODE=test.",
     "plans.paydunyaCheckoutFail": "Échec PayDunya au checkout. Vérifiez les logs serveur et l’intégration dans votre espace PayDunya.",
+    "plans.payFailedUser":
+      "Le paiement sécurisé n’a pas pu s’ouvrir — réessayez dans quelques instants ou contactez le support.",
     "plans.configMissingPaydunya":
       "Variables PayDunya manquantes — renseignez PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY et PAYDUNYA_TOKEN.",
     "plans.activePass": "Formule active",

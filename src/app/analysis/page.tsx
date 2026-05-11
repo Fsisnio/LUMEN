@@ -7,6 +7,7 @@ import { Sparkles, RefreshCw, AlertCircle, Globe2, FileText } from "lucide-react
 import { useLocale } from "@/contexts/LocaleContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { TenantGate } from "@/components/TenantGate";
+import { isProductionBuild } from "@/lib/build-mode";
 import type { QuotaSnapshot } from "@/lib/subscription-quota";
 
 function tierNameKey(id: string): string {
@@ -22,6 +23,9 @@ function tierNameKey(id: string): string {
 function displayErrorFromPayload(payload: Record<string, unknown>, t: (k: string) => string): string {
   const raw = typeof payload.error === "string" ? payload.error : "";
   if (raw.startsWith("analysis.")) return t(raw);
+  if (isProductionBuild() && /\bOPENAI|\.env\b/i.test(raw)) {
+    return t("analysis.aiUnavailablePublic");
+  }
   return raw || "HTTP error";
 }
 

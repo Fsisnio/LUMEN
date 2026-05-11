@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { isProductionBuild } from "@/lib/build-mode";
 
 function SuccessInner() {
   const router = useRouter();
@@ -116,7 +117,9 @@ function SuccessInner() {
       <div className="mx-auto max-w-lg space-y-3 p-8">
         <h1 className="font-display text-xl font-semibold text-[var(--navy)]">{t("plans.successTitle")}</h1>
         <p className="text-sm text-gray-700">{t("plans.successPending")}</p>
-        <p className="font-mono text-xs text-gray-500">{reason}</p>
+        {!isProductionBuild() && reason ? (
+          <p className="font-mono text-xs text-gray-500">{reason}</p>
+        ) : null}
         {back}
       </div>
     );
@@ -126,7 +129,9 @@ function SuccessInner() {
     <div className="mx-auto max-w-lg space-y-3 p-8">
       <h1 className="font-display text-xl font-semibold text-rose-700">{t("plans.successIssue")}</h1>
       <p className="text-sm text-gray-700">{t("plans.successFail")}</p>
-      {reason && <p className="font-mono text-xs text-gray-500">{reason}</p>}
+      {reason && !isProductionBuild() ? (
+        <p className="font-mono text-xs text-gray-500">{reason}</p>
+      ) : null}
       {back}
     </div>
   );

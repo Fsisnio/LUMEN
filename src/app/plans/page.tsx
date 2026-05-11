@@ -4,12 +4,26 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { isProductionBuild } from "@/lib/build-mode";
 import { SUBSCRIPTION_OFFERS, type OfferTierId } from "@/lib/subscription-offers";
 import type { Organization } from "@/lib/types";
 
 function offerNameKey(id: OfferTierId): string {
   const o = SUBSCRIPTION_OFFERS.find((x) => x.id === id);
   return o?.i18n.nameKey ?? "";
+}
+
+const PLANS_PAY_ERROR_PUBLIC_KEYS: Partial<Record<string, string>> = {
+  "plans.configMissingPaydunya": "plans.payUnavailableUser",
+  "plans.paydunyaCredMismatch": "plans.payFailedUser",
+  "plans.paydunyaCheckoutFail": "plans.payFailedUser",
+};
+
+function localizedPlansCheckoutErrorMessage(key: string, t: (k: string) => string): string {
+  if (!isProductionBuild()) return t(key);
+  if (!key.startsWith("plans.")) return t(key);
+  const mapped = PLANS_PAY_ERROR_PUBLIC_KEYS[key];
+  return t(mapped ?? "plans.payFailedUser");
 }
 
 function hasActivePaidPass(org: Organization | null): boolean {
@@ -59,16 +73,19 @@ export default function PlansPage() {
 
         if (!res.ok) {
           if (res.status === 503) {
-            setCheckoutError(t("plans.configMissingPaydunya"));
+            setCheckoutError(localizedPlansCheckoutErrorMessage("plans.configMissingPaydunya", t));
             return;
           }
           if (typeof body.errorKey === "string" && body.errorKey.startsWith("plans.")) {
-            setCheckoutError(t(body.errorKey));
+            const msg = localizedPlansCheckoutErrorMessage(body.errorKey, t);
+            setCheckoutError(msg);
             return;
           }
-          const msg =
-            typeof body.error === "string" && body.error.trim() ? body.error : t("plans.checkoutFail");
-          setCheckoutError(msg);
+          const raw =
+            typeof body.error === "string" && body.error.trim()
+              ? body.error
+              : t("plans.checkoutFail");
+          setCheckoutError(isProductionBuild() ? t("plans.payFailedUser") : raw);
           return;
         }
 
@@ -76,9 +93,15 @@ export default function PlansPage() {
           window.location.href = body.url;
           return;
         }
-        setCheckoutError(t("plans.checkoutFail"));
+        setCheckoutError(isProductionBuild() ? t("plans.payFailedUser") : t("plans.checkoutFail"));
       } catch (e) {
-        setCheckoutError(e instanceof Error ? e.message : t("plans.checkoutFail"));
+        setCheckoutError(
+          isProductionBuild()
+            ? t("plans.payFailedUser")
+            : e instanceof Error
+              ? e.message
+              : t("plans.checkoutFail")
+        );
       } finally {
         setBusyTier(null);
         void refresh();
@@ -96,13 +119,21 @@ export default function PlansPage() {
         )
       : null;
 
+  const payUnavailableCopy = isProductionBuild()
+    ? t("plans.payUnavailableUser")
+    : t("plans.configMissingPaydunya");
+
   return (
     <div className="p-8">
       <div className="mx-auto max-w-6xl space-y-2">
         <h1 className="font-display text-2xl font-semibold text-[var(--navy)]">{t("plans.title")}</h1>
         <p className="max-w-2xl text-sm text-gray-600">{t("plans.subtitle")}</p>
-        <p className="max-w-2xl text-xs text-gray-500">{t("plans.payCfAApprox")}</p>
-        <p className="text-xs text-gray-500">{t("plans.note")}</p>
+        {!isProductionBuild() ? (
+          <>
+            <p className="max-w-2xl text-xs text-gray-500">{t("plans.payCfAApprox")}</p>
+            <p className="text-xs text-gray-500">{t("plans.note")}</p>
+          </>
+        ) : null}
         {typeof tenant?.nextRenewalDiscountPct === "number" && tenant.nextRenewalDiscountPct > 0 ? (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900">
             {t("plans.discountNext").replace("{pct}", String(tenant.nextRenewalDiscountPct))}
@@ -172,10 +203,10 @@ export default function PlansPage() {
                   <button
                     type="button"
                     disabled
-                    title={t("plans.configMissingPaydunya")}
+                    title={payUnavailableCopy}
                     className="w-full cursor-not-allowed rounded-lg bg-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-500"
                   >
-                    {t("plans.configMissingPaydunya")}
+                    {payUnavailableCopy}
                   </button>
                 ) : paydunyaOk === null ? (
                   <button

@@ -69,7 +69,10 @@ export async function POST(request: Request) {
     const credLikely =
       /private\s*key/i.test(msg) || /token combination/i.test(msg) || /^TEST\s/i.test(msg);
     const errorKey = credLikely ? "plans.paydunyaCredMismatch" : "plans.paydunyaCheckoutFail";
-    return NextResponse.json({ error: msg, errorKey }, { status: 502 });
+    if (process.env.NODE_ENV !== "production") {
+      return NextResponse.json({ error: msg, errorKey }, { status: 502 });
+    }
+    return NextResponse.json({ errorKey }, { status: 502 });
   }
 
   return NextResponse.json({ url: checkoutUrl });
