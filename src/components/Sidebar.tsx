@@ -13,6 +13,7 @@ import {
   Sparkles,
   ChevronRight,
   Building2,
+  Ticket,
 } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/geographic", labelKey: "nav.geographic", icon: MapPin },
   { href: "/risk", labelKey: "nav.risk", icon: Shield },
   { href: "/analysis", labelKey: "nav.analysis", icon: Sparkles },
+  { href: "/plans", labelKey: "nav.plans", icon: Ticket },
   { href: "/users", labelKey: "nav.users", icon: Users },
 ];
 
