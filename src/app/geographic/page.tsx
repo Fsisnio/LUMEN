@@ -5,7 +5,8 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { TenantGate } from "@/components/TenantGate";
 import { MapPin, Users, FolderKanban } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { SenegalMap } from "@/components/SenegalMap";
+import { ProjectWorldMap } from "@/components/ProjectWorldMap";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function GeographicPage() {
   return (
@@ -18,6 +19,7 @@ export default function GeographicPage() {
 function GeographicPageInner() {
   const { data, loading, error } = useData();
   const { t } = useLocale();
+  const { tenant } = useAuth();
   const projects = data?.projects ?? [];
   const programs = data?.programs ?? [];
 
@@ -34,10 +36,17 @@ function GeographicPageInner() {
   );
 
   const chartData = Object.entries(regionStats).map(([name, data]) => ({
-    name: name,
+    name: name || "—",
     projects: data.projects,
     beneficiaries: Math.round(data.beneficiaries / 1000),
   }));
+
+  const programsMini = programs.map((p) => ({ id: p.id, name: p.name }));
+  const withCoordsCount = projects.filter((p) => p.lat != null && p.lng != null).length;
+  const mapSectionTitle =
+    `${tenant?.name ?? t("geographic.organizationScope")} — ${t("geographic.projectLocationsHeading")}`;
+  const mapFooterCaption =
+    `${tenant?.name ?? "—"} · ${withCoordsCount}/${projects.length} ${t("geographic.projectsWithMapCoords")}`;
 
   if (loading) {
     return (
@@ -67,12 +76,10 @@ function GeographicPageInner() {
       </header>
 
       <div className="p-8">
-        {/* Interactive Map — Senegal */}
+        {/* Interactive map — OSM tiles, framing from project coordinates worldwide */}
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold text-[var(--navy)]">
-              Collaborative Sénégal — Project Locations
-            </h2>
+            <h2 className="font-display text-lg font-semibold text-[var(--navy)]">{mapSectionTitle}</h2>
             <div className="flex flex-wrap justify-end gap-2">
               {Object.entries(regionStats).map(([region, data]) => (
                 <span
@@ -84,7 +91,7 @@ function GeographicPageInner() {
               ))}
             </div>
           </div>
-          <SenegalMap projects={projects} />
+          <ProjectWorldMap projects={projects} programs={programsMini} footerCaption={mapFooterCaption} />
         </div>
 
         {/* Stats */}

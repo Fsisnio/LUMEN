@@ -8,6 +8,7 @@ import {
   risks as defaultRisks,
 } from "./mock-data";
 import { hashPassword, verifyPassword } from "./password-crypto";
+import { isProductionBuild } from "./build-mode";
 
 export interface DataStore {
   organizations: Organization[];
@@ -25,6 +26,19 @@ export function seedHash(plain: string): string {
 }
 
 export function getDefaultStore(): DataStore {
+  if (isProductionBuild()) {
+    return {
+      organizations: [],
+      programs: [],
+      projects: [],
+      indicators: [],
+      budgetLines: [],
+      risks: [],
+      users: [],
+      sessions: [],
+    };
+  }
+
   return {
     organizations: [...defaultOrgs],
     programs: [...defaultPrograms],
@@ -48,6 +62,7 @@ export const DEMO_ADMINS: { email: string; name: string; password: string; orgId
  * (fixes legacy @caritas-* emails and hashes after renames / password changes).
  */
 export function syncDemoAdminUsersInPlace(store: DataStore): boolean {
+  if (isProductionBuild()) return false;
   let changed = false;
   const orgIds = new Set(store.organizations.map((o) => o.id));
 
@@ -150,7 +165,7 @@ export function migrateStoreInPlace(store: DataStore): { changed: boolean } {
     changed = true;
   }
 
-  if (store.users.length === 0) {
+  if (!isProductionBuild() && store.users.length === 0) {
     const orgIds = new Set(store.organizations.map((o) => o.id));
     for (const admin of DEMO_ADMINS) {
       if (!orgIds.has(admin.orgId)) continue;

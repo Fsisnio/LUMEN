@@ -2,19 +2,6 @@
 
 import { useState, useEffect } from "react";
 import type { Project, RiskLevel } from "@/lib/types";
-import type { ProgramTheme } from "@/lib/types";
-
-const PROGRAMS: ProgramTheme[] = [
-  "Food Security",
-  "Health & Nutrition",
-  "Education",
-  "Livelihoods",
-  "Emergency Response",
-  "Social Protection",
-  "Climate Resilience",
-];
-
-const REGIONS = ["Dakar", "Thiès", "Saint-Louis", "Tambacounda", "Ziguinchor", "Kolda", "Fatick", "Kaolack", "Louga", "Matam", "Diourbel", "Kédougou", "Sédhiou"];
 
 const STATUSES = ["active", "completed", "delayed", "planning"] as const;
 const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
@@ -213,18 +200,13 @@ export function ProjectForm({ project, programIds, onSave, onCancel }: ProjectFo
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Region</label>
-          <select
+          <input
+            type="text"
             value={form.region}
             onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
             className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-          >
-            <option value="">Select region</option>
-            {REGIONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            placeholder="Enter region name"
+          />
         </div>
       </div>
 

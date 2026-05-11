@@ -2,22 +2,28 @@
 
 import { useEffect, useRef } from "react";
 import type { Project } from "@/lib/types";
-import { programs } from "@/lib/mock-data";
 
-interface SenegalMapProps {
+const WORLD_FALLBACK_CENTER: [number, number] = [15, 0];
+const WORLD_FALLBACK_ZOOM = 2;
+/** When only one marker exists, zoom to this level (continent / country sized). */
+const SINGLE_POINT_ZOOM = 6;
+
+export interface ProjectWorldMapProps {
   projects: Project[];
+  /** Program names by id — tenant data only. */
+  programs: { id: string; name: string }[];
+  footerCaption?: string;
 }
 
-// Senegal center: 14.5°N, -14.5°W
-const SENEGAL_CENTER: [number, number] = [14.5, -14.5];
-const DEFAULT_ZOOM = 6;
-
-export function SenegalMap({ projects }: SenegalMapProps) {
+export function ProjectWorldMap({ projects, programs, footerCaption }: ProjectWorldMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
+
+    const programNameFor = (programId: string) =>
+      programs.find((pr) => pr.id === programId)?.name ?? "";
 
     const initMap = async () => {
       const el = mapRef.current;
@@ -28,7 +34,7 @@ export function SenegalMap({ projects }: SenegalMapProps) {
         mapInstanceRef.current.remove();
       }
 
-      const map = L.map(el).setView(SENEGAL_CENTER, DEFAULT_ZOOM);
+      const map = L.map(el).setView(WORLD_FALLBACK_CENTER, WORLD_FALLBACK_ZOOM);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
@@ -37,7 +43,6 @@ export function SenegalMap({ projects }: SenegalMapProps) {
       const projectsWithCoords = projects.filter((p) => p.lat != null && p.lng != null);
 
       projectsWithCoords.forEach((project) => {
-        const program = programs.find((pr) => pr.id === project.programId);
         const marker = L.marker([project.lat!, project.lng!], {
           icon: L.divIcon({
             className: "custom-marker",
@@ -55,32 +60,43 @@ export function SenegalMap({ projects }: SenegalMapProps) {
           }),
         }).addTo(map);
 
+        const prog = programNameFor(project.programId);
+
         marker.bindPopup(`
           <div class="min-w-[200px]">
             <p class="font-semibold text-[var(--navy)]">${project.title}</p>
-            <p class="text-xs text-gray-500 mt-0.5">${project.code} · ${program?.name ?? ""}</p>
-            <p class="text-sm mt-2">${project.location}, ${project.region}</p>
+            <p class="text-xs text-gray-500 mt-0.5">${project.code}${prog ? ` · ${prog}` : ""}</p>
+            <p class="text-sm mt-2">${project.location}${project.region ? ", " + project.region : ""}</p>
             <p class="text-sm">${project.beneficiaries.toLocaleString("en-US")} beneficiaries</p>
             <a href="/projects/${project.id}" class="inline-block mt-2 text-sm font-medium text-[#c9a227] hover:underline">View project →</a>
           </div>
         `);
       });
 
+      const latlngs = projectsWithCoords.map((p): [number, number] => [p.lat!, p.lng!]);
+      if (latlngs.length === 1) {
+        map.setView(latlngs[0], SINGLE_POINT_ZOOM);
+      } else if (latlngs.length >= 2) {
+        const bounds = L.latLngBounds(latlngs).pad(0.08);
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14, animate: false });
+      }
+
+      queueMicrotask(() => map.invalidateSize());
       mapInstanceRef.current = map;
     };
 
-    initMap();
+    void initMap();
     return () => {
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
     };
-  }, [projects]);
+  }, [projects, programs]);
 
   return (
     <div className="relative h-80 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
       <div ref={mapRef} className="h-full w-full" />
       <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 px-3 py-2 shadow-md">
-        <p className="text-xs font-medium text-gray-600">Collaborative Sénégal · {projects.length} project locations</p>
+        <p className="text-xs font-medium text-gray-600">{footerCaption ?? ""}</p>
       </div>
     </div>
   );

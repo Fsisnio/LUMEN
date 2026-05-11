@@ -51,7 +51,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Data
 
-The app uses mock data in `src/lib/mock-data.ts`. Replace with a backend (Django/FastAPI + PostgreSQL) for production.
+- **Production** (`next build`, `NODE_ENV=production`): initial datasets are **empty**. There are no seeded organizations, programs, projects, or demo accounts in the bundled defaults. Users supply all data (sign-up creates the first organization).
+- **Development**: if `data/store.json` is missing (see `.gitignore`), the app may hydrate once from `src/lib/mock-data.ts` for ergonomic testing.
+- **MongoDB**: a new production database stays empty until writes occur (no demo bootstrap in production). Non-production may still fill from the mock store the very first time collections are empty.
+- **Project regions** use a **free-text** field (no fixed region dropdown).
 
 ## Future Enhancements
 

@@ -1,5 +1,6 @@
 import type { Db } from "mongodb";
 import { mongoDb } from "./mongo-connection";
+import { isProductionBuild } from "./build-mode";
 import type { DataStore } from "./app-store-schema";
 import { getDefaultStore, migrateStoreInPlace, DEMO_ADMINS } from "./app-store-schema";
 import { hashPassword, verifyPassword } from "./password-crypto";
@@ -97,7 +98,9 @@ async function bootstrapMongo(): Promise<void> {
 
   await migrateLegacySnapshotIfAny(db);
   await seedIfOrganizationsEmpty(db);
-  await syncDemoAdminsMongo(db);
+  if (!isProductionBuild()) {
+    await syncDemoAdminsMongo(db);
+  }
 }
 
 /** Align Mongo demo admins with code (handles @caritas-* → @collaborative-* and rotated passwords). */
@@ -149,6 +152,7 @@ async function syncDemoAdminsMongo(db: Db): Promise<void> {
 type LegacySnapshot = DataStore & { _id: typeof LEGACY_SNAPSHOT_ID };
 
 async function migrateLegacySnapshotIfAny(db: Db) {
+  if (isProductionBuild()) return;
   const leg = await db.collection<LegacySnapshot>(LEGACY_SNAPSHOT_COLL).findOne({ _id: LEGACY_SNAPSHOT_ID });
   if (!leg) return;
   const { _id, ...rest } = leg;
