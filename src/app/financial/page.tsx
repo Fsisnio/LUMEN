@@ -1,5 +1,7 @@
 "use client";
 
+import type { Project } from "@/lib/types";
+import type { LanguageCode } from "@/lib/locale";
 import { useData } from "@/hooks/use-data";
 import { useLocale } from "@/contexts/LocaleContext";
 import { TenantGate } from "@/components/TenantGate";
@@ -17,6 +19,114 @@ import {
   Legend,
 } from "recharts";
 
+const MS_DAY = 24 * 60 * 60 * 1000;
+
+function safePct(numerator: number, denominator: number): number {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return 0;
+  return Math.round((numerator / denominator) * 100);
+}
+
+function round1(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+}
+
+function projectElapsedFracAt(project: Project, whenMs: number): number | null {
+  const start = new Date(project.duration.start).getTime();
+  const end = new Date(project.duration.end).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+  return Math.min(1, Math.max(0, (whenMs - start) / (end - start)));
+}
+
+function portfolioPlannedConsumptionPct(projects: Project[], whenMs: number): number {
+  const withBudget = projects.filter((p) => p.budget > 0);
+  if (withBudget.length === 0) return 0;
+  const totalB = withBudget.reduce((s, p) => s + p.budget, 0);
+  if (totalB <= 0) return 0;
+  let weighted = 0;
+  for (const p of withBudget) {
+    const frac = projectElapsedFracAt(p, whenMs);
+    if (frac == null) continue;
+    weighted += p.budget * frac;
+  }
+  return (weighted / totalB) * 100;
+}
+
+function buildBurnRateSeries(
+  projects: Project[],
+  totalBudget: number,
+  totalSpent: number,
+  language: LanguageCode
+): { month: string; planned: number; actual: number }[] {
+  const now = new Date();
+  const nowMs = now.getTime();
+  const formatter = new Intl.DateTimeFormat(language === "fr" ? "fr" : "en-US", { month: "short" });
+  const spentPctToday = safePct(totalSpent, totalBudget);
+
+  const activeProjects = projects.filter((p) => p.status !== "completed");
+  const pool = activeProjects.length > 0 ? activeProjects : projects;
+
+  const rows: { month: string; planned: number; actual: number }[] = [];
+
+  for (let i = 0; i < 6; i++) {
+    const monthMid = new Date(now.getFullYear(), now.getMonth() - 5 + i, 15);
+    const endOfMonth = new Date(monthMid.getFullYear(), monthMid.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+
+    let planned: number;
+
+    const budgetProjects = pool.filter((p) => p.budget > 0);
+    if (budgetProjects.length > 0) {
+      planned = portfolioPlannedConsumptionPct(pool, endOfMonth);
+    } else if (pool.length > 0) {
+      let sum = 0;
+      let n = 0;
+      for (const p of pool) {
+        const f = projectElapsedFracAt(p, endOfMonth);
+        if (f != null) {
+          sum += f * 100;
+          n++;
+        }
+      }
+      planned = n > 0 ? sum / n : 0;
+    } else {
+      const rangeStart = nowMs - 180 * MS_DAY;
+      const rangeEnd = Math.max(nowMs + MS_DAY, rangeStart + MS_DAY);
+      const span = rangeEnd - rangeStart;
+      planned =
+        totalBudget <= 0 ? 0 : Math.min(100, Math.max(0, ((endOfMonth - rangeStart) / span) * 100));
+    }
+
+    let actual = 0;
+    if (totalBudget > 0 && spentPctToday > 0) {
+      if (endOfMonth <= nowMs) {
+        const horizonStart =
+          budgetProjects.length > 0
+            ? Math.min(...budgetProjects.map((p) => new Date(p.duration.start).getTime()))
+            : pool.length > 0
+              ? Math.min(...pool.map((p) => new Date(p.duration.start).getTime()))
+              : nowMs - 180 * MS_DAY;
+        const denom = Math.max(nowMs - horizonStart, MS_DAY);
+        actual = spentPctToday * Math.min(1, (endOfMonth - horizonStart) / denom);
+      } else {
+        actual = spentPctToday;
+      }
+    }
+
+    rows.push({
+      month: formatter.format(monthMid),
+      planned: round1(planned),
+      actual: round1(actual),
+    });
+  }
+
+  return rows;
+}
+
+function projectTimeElapsedPct(project: Project): number | null {
+  const frac = projectElapsedFracAt(project, Date.now());
+  return frac == null ? null : frac * 100;
+}
+
 export default function FinancialPage() {
   return (
     <TenantGate>
@@ -27,40 +137,36 @@ export default function FinancialPage() {
 
 function FinancialPageInner() {
   const { data, loading, error } = useData();
-  const { formatCurrency, t } = useLocale();
+  const { formatCurrency, t, language } = useLocale();
   const programs = data?.programs ?? [];
   const projects = data?.projects ?? [];
 
   const totalBudget = programs.reduce((s, p) => s + p.totalBudget, 0);
   const totalSpent = programs.reduce((s, p) => s + p.spentBudget, 0);
-  const utilizationRate = Math.round((totalSpent / totalBudget) * 100);
+  const utilizationRate = safePct(totalSpent, totalBudget);
 
   const programFinancials = programs.map((p) => ({
     name: p.name.length > 12 ? p.name.slice(0, 10) + "…" : p.name,
     budget: p.totalBudget / 1000,
     spent: p.spentBudget / 1000,
-    utilization: Math.round((p.spentBudget / p.totalBudget) * 100),
+    utilization: safePct(p.spentBudget, p.totalBudget),
   }));
 
-  // Simulate burn rate over time
-  const burnRateData = [
-    { month: "Jul", planned: 15, actual: 12 },
-    { month: "Aug", planned: 25, actual: 22 },
-    { month: "Sep", planned: 35, actual: 38 },
-    { month: "Oct", planned: 45, actual: 42 },
-    { month: "Nov", planned: 55, actual: 58 },
-    { month: "Dec", planned: 65, actual: 65 },
-  ];
+  const burnRateData = buildBurnRateSeries(projects, totalBudget, totalSpent, language);
 
   const slowSpenders = projects.filter((p) => {
+    if (p.status !== "active" || p.budget <= 0) return false;
+    const elapsed = projectTimeElapsedPct(p);
+    if (elapsed == null) return false;
     const rate = (p.spent / p.budget) * 100;
-    const elapsed = 70; // assume 70% of time elapsed
-    return rate < elapsed - 15 && p.status === "active";
+    return rate < elapsed - 15;
   });
   const fastSpenders = projects.filter((p) => {
+    if (p.status !== "active" || p.budget <= 0) return false;
+    const elapsed = projectTimeElapsedPct(p);
+    if (elapsed == null) return false;
     const rate = (p.spent / p.budget) * 100;
-    const elapsed = 70;
-    return rate > elapsed + 15 && p.status === "active";
+    return rate > elapsed + 15;
   });
 
   if (loading) {
@@ -206,9 +312,7 @@ function FinancialPageInner() {
                 {slowSpenders.map((p) => (
                   <li key={p.id} className="flex items-center justify-between rounded-lg bg-white/80 px-3 py-2">
                     <span className="font-medium">{p.title}</span>
-                    <span className="text-sm text-amber-700">
-                      {Math.round((p.spent / p.budget) * 100)}% spent
-                    </span>
+                    <span className="text-sm text-amber-700">{safePct(p.spent, p.budget)}% spent</span>
                   </li>
                 ))}
               </ul>
@@ -229,9 +333,7 @@ function FinancialPageInner() {
                 {fastSpenders.map((p) => (
                   <li key={p.id} className="flex items-center justify-between rounded-lg bg-white/80 px-3 py-2">
                     <span className="font-medium">{p.title}</span>
-                    <span className="text-sm text-rose-700">
-                      {Math.round((p.spent / p.budget) * 100)}% spent
-                    </span>
+                    <span className="text-sm text-rose-700">{safePct(p.spent, p.budget)}% spent</span>
                   </li>
                 ))}
               </ul>
