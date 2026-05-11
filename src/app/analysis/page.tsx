@@ -194,10 +194,12 @@ function AnalysisPageInner() {
           <div className="mb-6 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-500">{t("common.loading")}</div>
         )}
 
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
-          <p className="font-medium">{t("analysis.envHint")}</p>
-          <p className="mt-1 text-amber-800/90">{t("analysis.envDetail")}</p>
-        </div>
+        {process.env.NODE_ENV !== "production" ? (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
+            <p className="font-medium">{t("analysis.envHint")}</p>
+            <p className="mt-1 text-amber-800/90">{t("analysis.envDetail")}</p>
+          </div>
+        ) : null}
 
         {error && (
           <div className="mb-6 flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
