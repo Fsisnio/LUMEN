@@ -124,7 +124,7 @@ export default function PlansPage() {
     : t("plans.configMissingPaydunya");
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-2">
         <h1 className="font-display text-2xl font-semibold text-[var(--navy)]">{t("plans.title")}</h1>
         <p className="max-w-2xl text-sm text-gray-600">{t("plans.subtitle")}</p>
@@ -152,7 +152,7 @@ export default function PlansPage() {
         ) : null}
       </div>
 
-      <div className="mx-auto mt-10 grid max-w-6xl gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mx-auto mt-8 grid max-w-6xl gap-4 sm:mt-10 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
         {SUBSCRIPTION_OFFERS.map((offer) => {
           const isFree = offer.id === "free";
           const { nameKey, priceKey, periodKey, taglineKey, featureKeys } = offer.i18n;
@@ -176,7 +176,7 @@ export default function PlansPage() {
               <h2 className="font-display text-lg font-semibold text-[var(--navy)]">{t(nameKey)}</h2>
               <p className="mt-1 text-xs text-gray-500">{t(taglineKey)}</p>
               <div className="mt-5 flex flex-wrap items-baseline gap-1">
-                <span className="font-display text-3xl font-bold text-[var(--navy)]">{t(priceKey)}</span>
+                <span className="font-display text-2xl font-bold text-[var(--navy)] sm:text-3xl">{t(priceKey)}</span>
               </div>
               <p className="text-xs font-medium text-gray-600">{t(periodKey)}</p>
 

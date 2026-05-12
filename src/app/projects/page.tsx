@@ -101,22 +101,22 @@ function ProjectsPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
-        <div className="flex items-center justify-between">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-<h1 className="font-display text-3xl font-semibold text-[var(--navy)]">{t("projects.title")}</h1>
-        <p className="mt-1 text-gray-600">{t("projects.subtitle")}</p>
+            <h1 className="font-display text-2xl font-semibold text-[var(--navy)] sm:text-3xl">{t("projects.title")}</h1>
+            <p className="mt-1 text-gray-600">{t("projects.subtitle")}</p>
           </div>
           <button
             onClick={() => setModalProject("new")}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--accent-dark)]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--accent-dark)] sm:mt-2"
           >
             <Plus className="h-4 w-4" /> {t("projects.addProject")}
           </button>
         </div>
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Filters */}
         <div className="mb-6 flex flex-wrap gap-4">
           <div className="relative flex-1 min-w-[200px]">

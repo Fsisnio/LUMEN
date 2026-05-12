@@ -135,12 +135,12 @@ export default function UsersPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
-        <h1 className="font-display text-3xl font-semibold text-[var(--navy)]">{t("users.title")}</h1>
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <h1 className="font-display text-2xl font-semibold sm:text-3xl text-[var(--navy)]">{t("users.title")}</h1>
         <p className="mt-1 text-gray-600">{t("users.subtitle")}</p>
       </header>
 
-      <div className="space-y-8 p-8">
+      <div className="space-y-6 p-4 sm:space-y-8 sm:p-6 lg:p-8">
         <div className="rounded-lg border border-[var(--border)] bg-amber-50/50 p-4">
           <p className="text-sm text-amber-800">
             <strong>{user?.name ?? "—"}</strong>

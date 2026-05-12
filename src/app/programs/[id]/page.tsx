@@ -129,14 +129,14 @@ function ProgramDetailPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Link
           href="/programs"
           className="mb-4 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--navy)]"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Programs
         </Link>
-        <h1 className="font-display text-3xl font-semibold text-[var(--navy)]">
+        <h1 className="font-display text-2xl font-semibold sm:text-3xl text-[var(--navy)]">
           {program.name}
         </h1>
         <p className="mt-1 text-gray-600">Program-level dashboard</p>
@@ -145,7 +145,7 @@ function ProgramDetailPageInner() {
         )}
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* KPI Row */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">

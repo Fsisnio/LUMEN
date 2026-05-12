@@ -13,6 +13,8 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "nav.analysis": "AI Analysis",
     "nav.settings": "Settings",
     "nav.plans": "Plans",
+    "nav.openMenu": "Open navigation",
+    "nav.closeMenu": "Close navigation",
     "analysis.title": "Automated data analysis",
     "analysis.subtitle":
       "Uses all platform data (organizations, programs, projects, indicators, risks) to generate an executive-style brief via OpenAI.",
@@ -282,6 +284,8 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "nav.analysis": "Analyse IA",
     "nav.settings": "Paramètres",
     "nav.plans": "Offres",
+    "nav.openMenu": "Ouvrir le menu",
+    "nav.closeMenu": "Fermer le menu",
     "analysis.title": "Analyse automatique des données",
     "analysis.subtitle":
       "Exploite toutes les données de la plateforme (organisations, programmes, projets, indicateurs, risques) pour produire une note de synthèse via OpenAI.",

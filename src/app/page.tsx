@@ -104,11 +104,11 @@ function DashboardPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
-        <h1 className="font-display text-3xl font-semibold text-[var(--navy)]">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <h1 className="font-display text-2xl font-semibold text-[var(--navy)] sm:text-3xl">
           {t("dashboard.title")}
         </h1>
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 max-w-[65ch] text-sm text-gray-600 sm:text-base">
           {t("dashboard.subtitle")}
         </p>
         {tenant && (
@@ -118,7 +118,7 @@ function DashboardPageInner() {
         )}
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* KPI Cards */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <KPICard

@@ -24,7 +24,7 @@ export function TenantGate({ children }: { children: ReactNode }) {
 
   if (!tenant) {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center px-8">
+      <div className="flex min-h-[80vh] items-center justify-center px-4 sm:px-8">
         <div className="max-w-md text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--accent)]/15 text-[var(--accent-dark)]">
             <Building2 className="h-8 w-8" />

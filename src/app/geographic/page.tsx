@@ -159,12 +159,12 @@ function GeographicPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
-        <h1 className="font-display text-3xl font-semibold text-[var(--navy)]">{t("geographic.title")}</h1>
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <h1 className="font-display text-2xl font-semibold sm:text-3xl text-[var(--navy)]">{t("geographic.title")}</h1>
         <p className="mt-1 text-gray-600">{t("geographic.subtitle")}</p>
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <section className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)]/80 pb-4">
             <div className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-[0.12em] text-gray-600">

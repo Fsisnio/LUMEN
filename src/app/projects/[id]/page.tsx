@@ -218,7 +218,7 @@ function ProjectDetailPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Link
           href="/projects"
           className="mb-4 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--navy)]"
@@ -230,7 +230,7 @@ function ProjectDetailPageInner() {
             <p className="text-sm text-gray-500">
               {project.code} · {program.name}
             </p>
-            <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--navy)]">
+            <h1 className="mt-1 font-display text-2xl font-semibold sm:text-3xl text-[var(--navy)]">
               {project.title}
             </h1>
             <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
@@ -268,7 +268,7 @@ function ProjectDetailPageInner() {
         </div>
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
             <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--navy)]">

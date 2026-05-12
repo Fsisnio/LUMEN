@@ -56,14 +56,14 @@ function OrganizationsPageInner() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--card)] px-8 py-6">
-        <h1 className="font-display text-3xl font-semibold text-[var(--navy)]">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <h1 className="font-display text-2xl font-semibold text-[var(--navy)] sm:text-3xl">
           {t("organizations.title")}
         </h1>
         <p className="mt-1 text-gray-600">{t("organizations.myOrgSubtitle")}</p>
       </header>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {error && (
           <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-800">
             {error}
@@ -71,7 +71,7 @@ function OrganizationsPageInner() {
         )}
 
         <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-          <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] bg-gray-50 px-6 py-4">
+          <header className="flex flex-col gap-3 border-b border-[var(--border)] bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/15 text-[var(--accent-dark)]">
                 <Building2 className="h-5 w-5" />
@@ -90,7 +90,7 @@ function OrganizationsPageInner() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-dark)] hover:bg-[var(--accent)]/10"
+              className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-dark)] hover:bg-[var(--accent)]/10 sm:w-auto"
             >
               <Pencil className="h-4 w-4" /> {t("common.edit")}
             </button>

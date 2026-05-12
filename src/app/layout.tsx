@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
@@ -22,6 +22,11 @@ const sourceSans = Source_Sans_3({
 export const metadata: Metadata = {
   title: "Lumen | CARIPRIP - Collaborative Integrated Program Intelligence Platform",
   description: "Program management intelligence for faith-based humanitarian networks",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 const GA_MEASUREMENT_ID = "G-G3FBPTPLCK";

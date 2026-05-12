@@ -85,7 +85,7 @@ function SuccessInner() {
 
   if (state === "busy") {
     return (
-      <div className="mx-auto max-w-lg space-y-3 p-8">
+      <div className="mx-auto max-w-lg space-y-3 p-6 sm:p-8">
         <h1 className="font-display text-xl font-semibold text-[var(--navy)]">{t("plans.successTitle")}</h1>
         <p className="text-sm text-gray-600">{t("common.loading")}</p>
         {back}
@@ -95,7 +95,7 @@ function SuccessInner() {
 
   if (state === "ok") {
     return (
-      <div className="mx-auto max-w-lg space-y-3 p-8">
+      <div className="mx-auto max-w-lg space-y-3 p-6 sm:p-8">
         <h1 className="font-display text-xl font-semibold text-emerald-800">{t("plans.successThanks")}</h1>
         <p className="text-sm text-gray-700">{t("plans.successSynced")}</p>
         <div className="flex flex-wrap gap-4 pt-2">
@@ -114,7 +114,7 @@ function SuccessInner() {
 
   if (state === "pending") {
     return (
-      <div className="mx-auto max-w-lg space-y-3 p-8">
+      <div className="mx-auto max-w-lg space-y-3 p-6 sm:p-8">
         <h1 className="font-display text-xl font-semibold text-[var(--navy)]">{t("plans.successTitle")}</h1>
         <p className="text-sm text-gray-700">{t("plans.successPending")}</p>
         {!isProductionBuild() && reason ? (
@@ -126,7 +126,7 @@ function SuccessInner() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-3 p-8">
+    <div className="mx-auto max-w-lg space-y-3 p-6 sm:p-8">
       <h1 className="font-display text-xl font-semibold text-rose-700">{t("plans.successIssue")}</h1>
       <p className="text-sm text-gray-700">{t("plans.successFail")}</p>
       {reason && !isProductionBuild() ? (
@@ -142,7 +142,7 @@ export default function PlansSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           <p className="text-sm text-gray-600">{t("common.loading")}</p>
         </div>
       }
