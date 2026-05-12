@@ -22,15 +22,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, reason: "missing_token" }, { status: 400 });
   }
 
-  const payload = await confirmCheckoutInvoice(secrets, token.trim());
-  const result = await fulfillPaydunyaInvoice({
-    secrets,
-    payload,
-    expectedOrgId: user.organizationId,
-  });
+  try {
+    const payload = await confirmCheckoutInvoice(secrets, token.trim());
+    const result = await fulfillPaydunyaInvoice({
+      secrets,
+      payload,
+      expectedOrgId: user.organizationId,
+    });
 
-  if (!result.ok) {
-    return NextResponse.json({ ok: false, reason: result.reason }, { status: 200 });
+    if (!result.ok) {
+      return NextResponse.json({ ok: false, reason: result.reason }, { status: 200 });
+    }
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error("[paydunya verify]", e);
+    return NextResponse.json({ ok: false, reason: "verify_exception" }, { status: 500 });
   }
-  return NextResponse.json({ ok: true }, { status: 200 });
 }

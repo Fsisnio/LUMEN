@@ -182,6 +182,8 @@ export interface PaydunyaConfirmPayload {
     token?: string;
     total_amount?: number | string;
     description?: string;
+    /** Some PayDunya responses nest `custom_data` under `invoice` instead of root. */
+    custom_data?: Record<string, string | number | undefined>;
   };
 }
 

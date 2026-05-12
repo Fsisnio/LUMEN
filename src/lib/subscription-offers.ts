@@ -139,6 +139,7 @@ export const SUBSCRIPTION_OFFERS: SubscriptionOfferDef[] = [
 ].sort((a, b) => a.order - b.order) as SubscriptionOfferDef[];
 
 export function parsePayableTier(raw: string): Exclude<OfferTierId, "free"> | null {
-  if (raw === "day_pass" || raw === "week_pass" || raw === "month_pass") return raw;
+  const n = raw.trim().toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_");
+  if (n === "day_pass" || n === "week_pass" || n === "month_pass") return n;
   return null;
 }

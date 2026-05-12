@@ -13,6 +13,7 @@ import path from "path";
 import type { DataStore } from "./app-store-schema";
 import { getDefaultStore, migrateStoreInPlace } from "./app-store-schema";
 import { useMongoBackend } from "./mongo-connection";
+import { applyComplimentaryMonthlyPassMerge } from "./org-complimentary-grants";
 import {
   loadMongoAggregated,
   saveMongoFullStore,
@@ -285,10 +286,24 @@ export async function getOrganizations(): Promise<Organization[]> {
   return store.organizations;
 }
 
-export async function getOrganization(id: string): Promise<Organization | null> {
-  if (useMongoBackend()) return mongoGetOrganization(id);
-  const store = await loadFileStore();
-  return store.organizations.find((o) => o.id === id) ?? null;
+export type GetOrganizationOptions = {
+  /** Use stored org only (e.g. PayDunya fulfillment must not see virtual complimentary passes). */
+  skipComplimentaryMerge?: boolean;
+};
+
+export async function getOrganization(
+  id: string,
+  opts?: GetOrganizationOptions
+): Promise<Organization | null> {
+  let org: Organization | null;
+  if (useMongoBackend()) {
+    org = await mongoGetOrganization(id);
+  } else {
+    const store = await loadFileStore();
+    org = store.organizations.find((o) => o.id === id) ?? null;
+  }
+  if (!org || opts?.skipComplimentaryMerge) return org;
+  return applyComplimentaryMonthlyPassMerge(org);
 }
 
 export async function createOrganization(data: Omit<Organization, "id">): Promise<Organization> {

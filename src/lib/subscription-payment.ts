@@ -6,6 +6,7 @@ import {
   resolveConfirmPayload,
   confirmCheckoutInvoice,
 } from "./paydunya-client";
+import { normalizedPaydunyaCustom, paydunyaAmountAcceptable } from "./paydunya-fulfillment";
 import {
   tierFromRank,
   tierRank,
@@ -78,13 +79,15 @@ export async function fulfillPaydunyaInvoice(params: {
     return { ok: false, reason: `status:${status || "unknown"}` };
   }
 
-  const tierRaw = payload.custom_data?.tier ?? payload.custom_data?.tier_id;
-  const tier = typeof tierRaw === "string" ? parsePayableTier(tierRaw) : null;
+  const custom = normalizedPaydunyaCustom(payload);
+
+  const tierRaw = custom.tier || custom.tier_id;
+  const tier = tierRaw ? parsePayableTier(tierRaw) : null;
   if (!tier) {
     return { ok: false, reason: "missing_tier" };
   }
 
-  const orgRaw = payload.custom_data?.org_id ?? payload.custom_data?.organization_id;
+  const orgRaw = custom.org_id || custom.organization_id;
   const orgId = typeof orgRaw === "string" ? orgRaw.trim() : "";
   if (!orgId) {
     return { ok: false, reason: "missing_org" };
@@ -94,24 +97,11 @@ export async function fulfillPaydunyaInvoice(params: {
     return { ok: false, reason: "org_mismatch" };
   }
 
-  const expectedStr = payload.custom_data?.expected_cfa;
-  const total = payload.invoice?.total_amount;
-  const totalNum =
-    typeof total === "number"
-      ? total
-      : typeof total === "string"
-        ? Number(total)
-        : NaN;
-  const expectedNum = typeof expectedStr === "string" ? Number(expectedStr) : NaN;
-  if (
-    Number.isFinite(totalNum) &&
-    Number.isFinite(expectedNum) &&
-    Math.round(totalNum) !== Math.round(expectedNum)
-  ) {
+  if (!paydunyaAmountAcceptable(custom, payload)) {
     return { ok: false, reason: "amount_mismatch" };
   }
 
-  const org = await getOrganization(orgId);
+  const org = await getOrganization(orgId, { skipComplimentaryMerge: true });
   if (!org) {
     return { ok: false, reason: "org_not_found" };
   }
@@ -129,7 +119,7 @@ export async function fulfillPaydunyaInvoice(params: {
   /** One-time rebate: clearing after any successful paid pass except a new Month pass (re-grants 20%). */
   const merged: Partial<Organization> = { ...patch };
 
-  const discRaw = payload.custom_data?.discount_applied_pct;
+  const discRaw = custom.discount_applied_pct;
   const discountUsed =
     typeof discRaw === "string" &&
     Number.isFinite(Number(discRaw)) &&
@@ -143,6 +133,10 @@ export async function fulfillPaydunyaInvoice(params: {
     merged.nextRenewalDiscountPct = 20;
   }
 
-  await updateOrganization(orgId, merged);
+  const saved = await updateOrganization(orgId, merged);
+  if (!saved) {
+    console.error("[paydunya fulfill] updateOrganization returned null", orgId);
+    return { ok: false, reason: "persist_failed" };
+  }
   return { ok: true };
 }

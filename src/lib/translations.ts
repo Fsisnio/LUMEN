@@ -231,6 +231,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
       "Payment is still pending at PayDunya. Wait a minute and refresh your profile, or check your SMS / wallet confirmation.",
     "plans.successFail":
       "Your pass could not be activated automatically. If you were charged, contact support with your receipt.",
+    "plans.tryActivateAgain": "Retry activation — payment may complete with a delay",
     "plans.successIssue": "We could not confirm the payment yet",
     "plans.successBack": "← Back to plans",
     "plans.successDashboard": "Executive dashboard →",
@@ -502,6 +503,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
       "Le paiement est encore « en attente » chez PayDunya. Réessayez dans une minute ou complétez la validation sur téléphone/portefeuille.",
     "plans.successFail":
       "Activation automatique impossible. Si le débit est passé, contactez le support avec votre reçu.",
+    "plans.tryActivateAgain": "Réessayer l’activation (délai poss. côté PayDunya)",
     "plans.successIssue": "Confirmation du paiement en attente ou échouée",
     "plans.successBack": "← Retour aux offres",
     "plans.successDashboard": "Tableau de bord →",

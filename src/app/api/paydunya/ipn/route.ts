@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parsePaydunyaIpnBody, readPaydunyaSecrets } from "@/lib/paydunya-client";
+import { normalizedPaydunyaCustom } from "@/lib/paydunya-fulfillment";
 import { fulfillPaydunyaInvoice } from "@/lib/subscription-payment";
 
 export const runtime = "nodejs";
@@ -29,7 +30,8 @@ export async function POST(request: Request) {
 
   const result = await fulfillPaydunyaInvoice({ secrets, payload: parsed });
   if (!result.ok) {
-    console.warn("[paydunya ipn]", result.reason);
+    const ck = Object.keys(normalizedPaydunyaCustom(parsed));
+    console.warn("[paydunya ipn]", result.reason, { keys: ck.length ? ck.join(",") : "(no custom)" });
   }
   return new NextResponse("ok", { status: 200 });
 }

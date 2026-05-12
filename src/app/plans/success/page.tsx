@@ -16,6 +16,7 @@ function SuccessInner() {
 
   const [state, setState] = useState<"busy" | "ok" | "pending" | "fail">("busy");
   const [reason, setReason] = useState<string>("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!token?.trim()) {
@@ -72,7 +73,13 @@ function SuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [token, refresh]);
+  }, [token, refresh, attempt]);
+
+  const retryActivate = () => {
+    setReason("");
+    setState("busy");
+    setAttempt((a) => a + 1);
+  };
 
   const back = (
     <Link
@@ -120,7 +127,16 @@ function SuccessInner() {
         {!isProductionBuild() && reason ? (
           <p className="font-mono text-xs text-gray-500">{reason}</p>
         ) : null}
-        {back}
+        <div className="flex flex-wrap items-center gap-4 pt-1">
+          <button
+            type="button"
+            onClick={() => retryActivate()}
+            className="text-sm font-semibold text-[var(--accent-dark)] underline-offset-4 hover:underline"
+          >
+            {t("plans.tryActivateAgain")}
+          </button>
+          {back}
+        </div>
       </div>
     );
   }
@@ -132,7 +148,16 @@ function SuccessInner() {
       {reason && !isProductionBuild() ? (
         <p className="font-mono text-xs text-gray-500">{reason}</p>
       ) : null}
-      {back}
+      <div className="flex flex-wrap items-center gap-4 pt-1">
+        <button
+          type="button"
+          onClick={() => retryActivate()}
+          className="text-sm font-semibold text-[var(--accent-dark)] underline-offset-4 hover:underline"
+        >
+          {t("plans.tryActivateAgain")}
+        </button>
+        {back}
+      </div>
     </div>
   );
 }
