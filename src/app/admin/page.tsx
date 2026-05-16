@@ -14,7 +14,28 @@ import {
   RefreshCw,
   Ticket,
   AlertTriangle,
+  Globe2,
+  Target,
+  TrendingUp,
+  Heart,
+  Activity,
+  Clock,
+  Crown,
 } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  RadialBarChart,
+  RadialBar,
+} from "recharts";
 import { KPICard } from "@/components/KPICard";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -24,10 +45,37 @@ type Overview = {
     users: number;
     programs: number;
     projects: number;
+    indicators: number;
+    risks: number;
     activeSubscriptions: number;
   };
+  financial: { totalBudget: number; totalSpent: number; utilizationPct: number; totalBeneficiaries: number };
   estimatedMrrUsd: number;
   byTier: Record<string, number>;
+  byStatus: Record<"active" | "completed" | "delayed" | "planning", number>;
+  byRisk: Record<"low" | "medium" | "high" | "critical", number>;
+  risks: { open: number; highOrCritical: number };
+  byCountry: { country: string; orgs: number; projects: number; users: number; budget: number }[];
+  programsByTheme: { theme: string; count: number; budget: number; spent: number; projects: number }[];
+  topOrgsByBudget: { id: string; name: string; country: string; budget: number; spent: number; projects: number; tier: string }[];
+  topOrgsByBeneficiaries: { id: string; name: string; country: string; beneficiaries: number; projects: number; tier: string }[];
+  passesExpiringSoon: { orgId: string; name: string; country: string; tier: string; paidUntil: string; daysLeft: number }[];
+  indicators: {
+    totalTarget: number;
+    totalActual: number;
+    attainmentPct: number;
+    topUnits: { unit: string; actual: number; target: number }[];
+  };
+  recentSignups: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    organizationName: string;
+    country: string;
+    createdAt: string;
+    isSuperadmin: boolean;
+  }[];
 };
 
 type AdminOrg = {
@@ -68,11 +116,73 @@ const TIER_BADGE: Record<string, string> = {
   month_pass: "bg-amber-50 text-amber-800 ring-amber-200",
 };
 
+const TIER_COLOR: Record<string, string> = {
+  free: "#94a3b8",
+  day_pass: "#0ea5e9",
+  week_pass: "#8b5cf6",
+  month_pass: "#c9a227",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  active: "#10b981",
+  completed: "#2d3548",
+  delayed: "#f59e0b",
+  planning: "#94a3b8",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  active: "En cours",
+  completed: "Terminés",
+  delayed: "En retard",
+  planning: "Planifiés",
+};
+
+const RISK_COLOR: Record<string, string> = {
+  low: "#10b981",
+  medium: "#f59e0b",
+  high: "#ef4444",
+  critical: "#7f1d1d",
+};
+
+const RISK_LABEL: Record<string, string> = {
+  low: "Faible",
+  medium: "Moyen",
+  high: "Élevé",
+  critical: "Critique",
+};
+
+const COUNTRY_PALETTE = [
+  "#c9a227",
+  "#2d3548",
+  "#5c6b7a",
+  "#8b9a6b",
+  "#a67c52",
+  "#6b8e9a",
+  "#9a7b5c",
+  "#0ea5e9",
+  "#8b5cf6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+];
+
 function formatDate(iso?: string): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatUsd(n: number, compact = false): string {
+  if (compact && n >= 1000) {
+    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+    return `$${(n / 1000).toFixed(0)}k`;
+  }
+  return `$${n.toLocaleString("fr-FR")}`;
+}
+
+function formatInt(n: number): string {
+  return n.toLocaleString("fr-FR");
 }
 
 function effectiveTier(o: AdminOrg, now: number): string {
@@ -177,6 +287,60 @@ export default function SuperadminPage() {
       .slice(0, 200);
   }, [users, query]);
 
+  const tierPieData = useMemo(() => {
+    if (!overview) return [];
+    return (["free", "day_pass", "week_pass", "month_pass"] as const)
+      .map((tier) => ({ name: TIER_LABEL[tier], value: overview.byTier[tier] ?? 0, color: TIER_COLOR[tier] }))
+      .filter((x) => x.value > 0);
+  }, [overview]);
+
+  const statusPieData = useMemo(() => {
+    if (!overview) return [];
+    return (Object.keys(overview.byStatus) as Array<keyof typeof overview.byStatus>)
+      .map((k) => ({ name: STATUS_LABEL[k], value: overview.byStatus[k], color: STATUS_COLOR[k] }))
+      .filter((x) => x.value > 0);
+  }, [overview]);
+
+  const riskBarData = useMemo(() => {
+    if (!overview) return [];
+    return (["low", "medium", "high", "critical"] as const).map((k) => ({
+      name: RISK_LABEL[k],
+      value: overview.byRisk[k] ?? 0,
+      color: RISK_COLOR[k],
+    }));
+  }, [overview]);
+
+  const countryBarData = useMemo(() => {
+    if (!overview) return [];
+    return overview.byCountry.slice(0, 10).map((c, i) => ({
+      name: c.country.length > 12 ? c.country.slice(0, 10) + "…" : c.country,
+      projects: c.projects,
+      orgs: c.orgs,
+      budgetK: Math.round(c.budget / 1000),
+      color: COUNTRY_PALETTE[i % COUNTRY_PALETTE.length],
+    }));
+  }, [overview]);
+
+  const themeBarData = useMemo(() => {
+    if (!overview) return [];
+    return overview.programsByTheme.slice(0, 8).map((p) => ({
+      name: p.theme.length > 14 ? p.theme.slice(0, 12) + "…" : p.theme,
+      budgetK: Math.round(p.budget / 1000),
+      spentK: Math.round(p.spent / 1000),
+    }));
+  }, [overview]);
+
+  const indicatorRadialData = useMemo(() => {
+    if (!overview) return [];
+    return [
+      {
+        name: "Atteinte",
+        value: Math.min(overview.indicators.attainmentPct, 100),
+        fill: "#c9a227",
+      },
+    ];
+  }, [overview]);
+
   if (authLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -213,11 +377,12 @@ export default function SuperadminPage() {
               <Sparkles className="h-3.5 w-3.5" /> Console superadmin
             </div>
             <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Tableau de bord plateforme
+              Vue 360° de la plateforme
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-white/80">
-              Pilotez toutes les organisations Lumen, surveillez les abonnements
-              et accordez manuellement des forfaits en un clic.
+              Toutes les organisations, tous les programmes, tous les indicateurs et
+              risques agrégés en temps réel. Pilotage, abonnements et octroi manuel de
+              forfaits depuis un seul endroit.
             </p>
           </div>
           <button
@@ -252,85 +417,242 @@ export default function SuperadminPage() {
           </div>
         )}
 
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {/* Layer 1 — primary KPIs */}
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+          <KPICard title="Organisations" value={overview?.counts.organizations ?? "—"} icon={Building2} subtitle="Tous tenants" />
+          <KPICard title="Utilisateurs" value={overview?.counts.users ?? "—"} icon={Users} subtitle="Comptes plateforme" />
+          <KPICard title="Programmes" value={overview?.counts.programs ?? "—"} icon={FolderKanban} subtitle="Thématiques" />
+          <KPICard title="Projets" value={overview?.counts.projects ?? "—"} icon={FolderOpen} subtitle="Portefeuille global" />
+        </div>
+
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KPICard
-            title="Organisations"
-            value={overview?.counts.organizations ?? "—"}
-            icon={Building2}
-            subtitle="Tous tenants"
+            title="Budget total"
+            value={overview ? formatUsd(overview.financial.totalBudget, true) : "—"}
+            icon={DollarSign}
+            subtitle={overview ? `Dépensé : ${formatUsd(overview.financial.totalSpent, true)}` : undefined}
           />
           <KPICard
-            title="Utilisateurs"
-            value={overview?.counts.users ?? "—"}
-            icon={Users}
-            subtitle="Comptes actifs"
+            title="Taux d'exécution"
+            value={overview ? `${overview.financial.utilizationPct}%` : "—"}
+            icon={TrendingUp}
+            trend={
+              overview
+                ? overview.financial.utilizationPct >= 70
+                  ? "up"
+                  : overview.financial.utilizationPct < 50
+                  ? "down"
+                  : "neutral"
+                : undefined
+            }
+            trendValue={
+              overview
+                ? overview.financial.utilizationPct >= 70
+                  ? "Bonne consommation"
+                  : overview.financial.utilizationPct < 50
+                  ? "Sous-utilisé"
+                  : "Modéré"
+                : undefined
+            }
           />
           <KPICard
-            title="Programmes"
-            value={overview?.counts.programs ?? "—"}
-            icon={FolderKanban}
-            subtitle="Toutes orgs"
-          />
-          <KPICard
-            title="Projets"
-            value={overview?.counts.projects ?? "—"}
-            icon={FolderOpen}
-            subtitle="Portefeuille global"
-          />
-          <KPICard
-            title="Abonnements actifs"
-            value={overview?.counts.activeSubscriptions ?? "—"}
-            icon={BadgeCheck}
-            subtitle="Pass en cours"
+            title="Bénéficiaires"
+            value={overview ? formatInt(overview.financial.totalBeneficiaries) : "—"}
+            icon={Heart}
+            subtitle="Personnes touchées"
           />
           <KPICard
             title="MRR estimé"
-            value={
-              overview
-                ? `$${overview.estimatedMrrUsd.toLocaleString("fr-FR")}`
-                : "—"
-            }
-            icon={DollarSign}
-            subtitle="USD / cycle pass"
+            value={overview ? formatUsd(overview.estimatedMrrUsd) : "—"}
+            icon={BadgeCheck}
+            subtitle={overview ? `${overview.counts.activeSubscriptions} pass actifs` : undefined}
           />
         </div>
 
-        {overview && (
-          <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h3 className="font-display text-base font-semibold text-[var(--navy)]">
-              Répartition par forfait
-            </h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {(["free", "day_pass", "week_pass", "month_pass"] as const).map((tier) => {
-                const count = overview.byTier[tier] ?? 0;
-                const total = Object.values(overview.byTier).reduce((s, v) => s + v, 0);
-                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                return (
-                  <div key={tier} className="rounded-lg border border-[var(--border)] p-3">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${TIER_BADGE[tier]}`}
-                      >
-                        {TIER_LABEL[tier]}
-                      </span>
-                      <span className="font-display text-lg font-semibold text-[var(--navy)]">
-                        {count}
-                      </span>
-                    </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full bg-[var(--accent)]"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-[11px] text-gray-500">{pct}% du parc</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Layer 2 — charts row */}
+        <div className="mb-8 grid gap-6 lg:grid-cols-3">
+          <ChartCard title="Forfaits actifs" icon={Crown} subtitle="Répartition par tier">
+            {tierPieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={tierPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value" label={(d) => `${d.value}`}>
+                    {tierPieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value} org(s)`, ""]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
+          </ChartCard>
 
+          <ChartCard title="Projets par statut" icon={Activity} subtitle="État du portefeuille">
+            {statusPieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value" label={(d) => `${d.value}`}>
+                    {statusPieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value} projet(s)`, ""]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
+          </ChartCard>
+
+          <ChartCard title="Risques projets" icon={AlertTriangle} subtitle="Niveau de risque agrégé">
+            {riskBarData.some((d) => d.value > 0) ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={riskBarData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip formatter={(value) => [`${value} projet(s)`, ""]} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {riskBarData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
+          </ChartCard>
+        </div>
+
+        <div className="mb-8 grid gap-6 lg:grid-cols-2">
+          <ChartCard title="Pays — projets et budget" icon={Globe2} subtitle="Top 10 par dotation">
+            {countryBarData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={countryBarData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-25} textAnchor="end" height={50} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}k`} />
+                  <Tooltip
+                    formatter={(value, name) => {
+                      if (name === "budgetK") return [`$${value}k`, "Budget"];
+                      if (name === "projects") return [`${value}`, "Projets"];
+                      return [String(value), name];
+                    }}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="projects" fill="#2d3548" name="Projets" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="right" dataKey="budgetK" fill="#c9a227" name="Budget" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
+          </ChartCard>
+
+          <ChartCard title="Programmes — budget vs dépenses" icon={FolderKanban} subtitle="Top 8 thématiques">
+            {themeBarData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={themeBarData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-25} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}k`} />
+                  <Tooltip formatter={(value) => [`$${value}k`, ""]} />
+                  <Legend />
+                  <Bar dataKey="budgetK" fill="#2d3548" name="Budget" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="spentK" fill="#c9a227" name="Dépensé" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
+          </ChartCard>
+        </div>
+
+        <div className="mb-8 grid gap-6 lg:grid-cols-3">
+          <ChartCard title="Atteinte indicateurs" icon={Target} subtitle="Cible vs réalisé (agrégé)">
+            <div className="relative h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart innerRadius="65%" outerRadius="100%" data={indicatorRadialData} startAngle={90} endAngle={-270}>
+                  <RadialBar background dataKey="value" cornerRadius={12} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-display text-3xl font-semibold text-[var(--navy)]">
+                  {overview?.indicators.attainmentPct ?? 0}%
+                </span>
+                <span className="text-xs text-gray-500">d'atteinte globale</span>
+              </div>
+            </div>
+            {overview && (
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md bg-gray-50 px-3 py-2">
+                  <p className="text-gray-500">Cible totale</p>
+                  <p className="font-semibold text-[var(--navy)]">{formatInt(overview.indicators.totalTarget)}</p>
+                </div>
+                <div className="rounded-md bg-gray-50 px-3 py-2">
+                  <p className="text-gray-500">Réalisé</p>
+                  <p className="font-semibold text-[var(--navy)]">{formatInt(overview.indicators.totalActual)}</p>
+                </div>
+              </div>
+            )}
+          </ChartCard>
+
+          <ChartCard title="Top organisations (budget)" icon={Crown} subtitle="6 premières">
+            <ul className="space-y-2">
+              {(overview?.topOrgsByBudget ?? []).map((o, i) => (
+                <li key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[var(--navy)]">
+                      <span className="text-gray-400">#{i + 1}</span> {o.name}
+                    </p>
+                    <p className="truncate text-[11px] text-gray-500">
+                      {o.country} · {o.projects} projet{o.projects > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-[var(--navy)]">{formatUsd(o.budget, true)}</p>
+                    <span className={`mt-0.5 inline-block rounded-full px-1.5 py-0 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
+                      {TIER_LABEL[o.tier]}
+                    </span>
+                  </div>
+                </li>
+              ))}
+              {(!overview || overview.topOrgsByBudget.length === 0) && <li className="text-sm text-gray-400">—</li>}
+            </ul>
+          </ChartCard>
+
+          <ChartCard title="Échéances proches" icon={Clock} subtitle="Pass expirant ≤ 14 jours">
+            <ul className="space-y-2">
+              {(overview?.passesExpiringSoon ?? []).map((o) => (
+                <li key={o.orgId} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[var(--navy)]">{o.name}</p>
+                    <p className="truncate text-[11px] text-gray-500">{o.country}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
+                      {TIER_LABEL[o.tier]}
+                    </span>
+                    <p
+                      className={`mt-0.5 text-xs font-semibold ${
+                        o.daysLeft <= 3 ? "text-rose-600" : o.daysLeft <= 7 ? "text-amber-600" : "text-gray-600"
+                      }`}
+                    >
+                      {o.daysLeft === 0 ? "Aujourd'hui" : `${o.daysLeft} jour${o.daysLeft > 1 ? "s" : ""}`}
+                    </p>
+                  </div>
+                </li>
+              ))}
+              {(!overview || overview.passesExpiringSoon.length === 0) && (
+                <li className="text-sm text-gray-400">Aucune échéance imminente.</li>
+              )}
+            </ul>
+          </ChartCard>
+        </div>
+
+        {/* Search + tables */}
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-display text-xl font-semibold text-[var(--navy)]">Organisations</h2>
           <div className="relative w-full sm:w-72">
@@ -384,15 +706,11 @@ export default function SuperadminPage() {
                       <td className="px-4 py-3 text-right tabular-nums">{o.programCount}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{o.projectCount}</td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${TIER_BADGE[tier]}`}
-                        >
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${TIER_BADGE[tier]}`}>
                           {TIER_LABEL[tier]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {formatDate(o.subscription?.paidUntil)}
-                      </td>
+                      <td className="px-4 py-3 text-gray-700">{formatDate(o.subscription?.paidUntil)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1.5">
                           {(["day_pass", "week_pass", "month_pass"] as const).map((t) => (
@@ -418,9 +736,75 @@ export default function SuperadminPage() {
           </div>
         </div>
 
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div>
+            <h2 className="mb-4 font-display text-xl font-semibold text-[var(--navy)]">Top bénéficiaires touchés</h2>
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-gray-50/60 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3">Organisation</th>
+                    <th className="px-4 py-3 text-right">Bénéficiaires</th>
+                    <th className="px-4 py-3 text-right">Projets</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(overview?.topOrgsByBeneficiaries ?? []).map((o) => (
+                    <tr key={o.id} className="border-b border-[var(--border)]/60 last:border-0">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-[var(--navy)]">{o.name}</div>
+                        <div className="text-[11px] text-gray-500">{o.country}</div>
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold">{formatInt(o.beneficiaries)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{o.projects}</td>
+                    </tr>
+                  ))}
+                  {(!overview || overview.topOrgsByBeneficiaries.length === 0) && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">—</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="mb-4 font-display text-xl font-semibold text-[var(--navy)]">Inscriptions récentes</h2>
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-gray-50/60 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3">Nom</th>
+                    <th className="px-4 py-3">Organisation</th>
+                    <th className="px-4 py-3">Créé</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(overview?.recentSignups ?? []).map((u) => (
+                    <tr key={u.id} className="border-b border-[var(--border)]/60 last:border-0">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-[var(--navy)]">{u.name}</div>
+                        <div className="text-[11px] text-gray-500">{u.email}</div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">{u.organizationName}</td>
+                      <td className="px-4 py-3 text-gray-500">{formatDate(u.createdAt)}</td>
+                    </tr>
+                  ))}
+                  {(!overview || overview.recentSignups.length === 0) && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">—</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-10">
           <h2 className="mb-4 font-display text-xl font-semibold text-[var(--navy)]">
-            Utilisateurs récents
+            Tous les utilisateurs ({filteredUsers.length})
           </h2>
           <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
             <div className="overflow-x-auto">
@@ -466,6 +850,41 @@ export default function SuperadminPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ChartCard({
+  title,
+  subtitle,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-display text-base font-semibold text-[var(--navy)]">{title}</h3>
+          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+        </div>
+        <div className="rounded-lg bg-[var(--accent)]/10 p-2">
+          <Icon className="h-4 w-4 text-[var(--accent-dark)]" />
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function EmptyChart() {
+  return (
+    <div className="flex h-[240px] items-center justify-center rounded-lg bg-gray-50 text-xs text-gray-400">
+      Pas encore de données
     </div>
   );
 }
