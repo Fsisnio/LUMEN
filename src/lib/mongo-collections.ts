@@ -4,6 +4,7 @@ import { isProductionBuild } from "./build-mode";
 import type { DataStore } from "./app-store-schema";
 import { getDefaultStore, migrateStoreInPlace, DEMO_ADMINS } from "./app-store-schema";
 import { hashPassword, verifyPassword } from "./password-crypto";
+import { ensureSuperadminMongo } from "./superadmin-bootstrap";
 import type {
   Organization,
   Program,
@@ -100,6 +101,11 @@ async function bootstrapMongo(): Promise<void> {
   await seedIfOrganizationsEmpty(db);
   if (!isProductionBuild()) {
     await syncDemoAdminsMongo(db);
+  }
+  try {
+    await ensureSuperadminMongo(db);
+  } catch (err) {
+    console.error("[superadmin] mongo bootstrap failed", err);
   }
 }
 

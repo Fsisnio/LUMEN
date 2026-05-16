@@ -9,6 +9,7 @@ import {
 } from "./mock-data";
 import { hashPassword, verifyPassword } from "./password-crypto";
 import { isProductionBuild } from "./build-mode";
+import { ensureSuperadminInPlace } from "./superadmin-bootstrap";
 
 export interface DataStore {
   organizations: Organization[];
@@ -183,6 +184,10 @@ export function migrateStoreInPlace(store: DataStore): { changed: boolean } {
   }
 
   if (syncDemoAdminUsersInPlace(store)) {
+    changed = true;
+  }
+
+  if (ensureSuperadminInPlace(store)) {
     changed = true;
   }
 

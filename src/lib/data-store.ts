@@ -493,6 +493,16 @@ export async function listUsersByOrganization(organizationId: string): Promise<U
   return store.users.filter((u) => u.organizationId === organizationId);
 }
 
+/** Every user across the platform — server-only (used by the superadmin console). */
+export async function listAllUsers(): Promise<User[]> {
+  if (useMongoBackend()) {
+    const all = await loadMongoAggregated();
+    return all.users;
+  }
+  const store = await loadFileStore();
+  return store.users;
+}
+
 export async function getUserById(id: string): Promise<User | null> {
   if (useMongoBackend()) return mongoGetUserById(id);
   const store = await loadFileStore();

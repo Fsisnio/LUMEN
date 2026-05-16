@@ -136,6 +136,8 @@ export interface User {
   /** Salted scrypt hash, format `salt:hash`. */
   passwordHash: string;
   createdAt: string;
+  /** Platform-wide superadmin (manages all orgs/users from the /admin console). */
+  isSuperadmin?: boolean;
 }
 
 export interface Session {
