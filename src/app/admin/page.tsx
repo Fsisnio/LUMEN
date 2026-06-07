@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   Users,
@@ -21,6 +22,7 @@ import {
   Activity,
   Clock,
   Crown,
+  ChevronRight,
 } from "lucide-react";
 import {
   PieChart,
@@ -192,6 +194,7 @@ function effectiveTier(o: AdminOrg, now: number): string {
 
 export default function SuperadminPage() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [overview, setOverview] = useState<Overview | null>(null);
   const [orgs, setOrgs] = useState<AdminOrg[]>([]);
@@ -602,21 +605,27 @@ export default function SuperadminPage() {
           <ChartCard title="Top organisations (budget)" icon={Crown} subtitle="6 premières">
             <ul className="space-y-2">
               {(overview?.topOrgsByBudget ?? []).map((o, i) => (
-                <li key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--navy)]">
-                      <span className="text-gray-400">#{i + 1}</span> {o.name}
-                    </p>
-                    <p className="truncate text-[11px] text-gray-500">
-                      {o.country} · {o.projects} projet{o.projects > 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-[var(--navy)]">{formatUsd(o.budget, true)}</p>
-                    <span className={`mt-0.5 inline-block rounded-full px-1.5 py-0 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
-                      {TIER_LABEL[o.tier]}
-                    </span>
-                  </div>
+                <li key={o.id}>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/admin/organizations/${o.id}`)}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-left transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]/5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--navy)]">
+                        <span className="text-gray-400">#{i + 1}</span> {o.name}
+                      </p>
+                      <p className="truncate text-[11px] text-gray-500">
+                        {o.country} · {o.projects} projet{o.projects > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-[var(--navy)]">{formatUsd(o.budget, true)}</p>
+                      <span className={`mt-0.5 inline-block rounded-full px-1.5 py-0 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
+                        {TIER_LABEL[o.tier]}
+                      </span>
+                    </div>
+                  </button>
                 </li>
               ))}
               {(!overview || overview.topOrgsByBudget.length === 0) && <li className="text-sm text-gray-400">—</li>}
@@ -626,23 +635,29 @@ export default function SuperadminPage() {
           <ChartCard title="Échéances proches" icon={Clock} subtitle="Pass expirant ≤ 14 jours">
             <ul className="space-y-2">
               {(overview?.passesExpiringSoon ?? []).map((o) => (
-                <li key={o.orgId} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--navy)]">{o.name}</p>
-                    <p className="truncate text-[11px] text-gray-500">{o.country}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
-                      {TIER_LABEL[o.tier]}
-                    </span>
-                    <p
-                      className={`mt-0.5 text-xs font-semibold ${
-                        o.daysLeft <= 3 ? "text-rose-600" : o.daysLeft <= 7 ? "text-amber-600" : "text-gray-600"
-                      }`}
-                    >
-                      {o.daysLeft === 0 ? "Aujourd'hui" : `${o.daysLeft} jour${o.daysLeft > 1 ? "s" : ""}`}
-                    </p>
-                  </div>
+                <li key={o.orgId}>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/admin/organizations/${o.orgId}`)}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-left transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]/5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--navy)]">{o.name}</p>
+                      <p className="truncate text-[11px] text-gray-500">{o.country}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] ring-1 ${TIER_BADGE[o.tier]}`}>
+                        {TIER_LABEL[o.tier]}
+                      </span>
+                      <p
+                        className={`mt-0.5 text-xs font-semibold ${
+                          o.daysLeft <= 3 ? "text-rose-600" : o.daysLeft <= 7 ? "text-amber-600" : "text-gray-600"
+                        }`}
+                      >
+                        {o.daysLeft === 0 ? "Aujourd'hui" : `${o.daysLeft} jour${o.daysLeft > 1 ? "s" : ""}`}
+                      </p>
+                    </div>
+                  </button>
                 </li>
               ))}
               {(!overview || overview.passesExpiringSoon.length === 0) && (
@@ -692,10 +707,18 @@ export default function SuperadminPage() {
                 )}
                 {filteredOrgs.map((o) => {
                   const tier = effectiveTier(o, now);
+                  const goDetail = () => router.push(`/admin/organizations/${o.id}`);
                   return (
-                    <tr key={o.id} className="border-b border-[var(--border)]/60 last:border-0">
+                    <tr
+                      key={o.id}
+                      onClick={goDetail}
+                      className="cursor-pointer border-b border-[var(--border)]/60 transition-colors last:border-0 hover:bg-[var(--accent)]/5"
+                    >
                       <td className="px-4 py-3">
-                        <div className="font-medium text-[var(--navy)]">{o.name}</div>
+                        <div className="flex items-center gap-2 font-medium text-[var(--navy)]">
+                          {o.name}
+                          <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-[var(--accent-dark)]" />
+                        </div>
                         <div className="text-[11px] text-gray-500">
                           {o.type}
                           {o.diocese ? ` · ${o.diocese}` : ""}
@@ -712,7 +735,7 @@ export default function SuperadminPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-700">{formatDate(o.subscription?.paidUntil)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           {(["day_pass", "week_pass", "month_pass"] as const).map((t) => (
                             <button
                               key={t}
@@ -726,6 +749,14 @@ export default function SuperadminPage() {
                               {t === "day_pass" ? "J" : t === "week_pass" ? "S" : "M"}
                             </button>
                           ))}
+                          <button
+                            type="button"
+                            onClick={goDetail}
+                            className="ml-1 inline-flex items-center gap-1 rounded-md bg-[var(--navy)] px-2 py-1 text-[11px] font-medium text-white hover:bg-[var(--accent-dark)]"
+                            title="Voir les détails"
+                          >
+                            Détails <ChevronRight className="h-3 w-3" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -750,7 +781,11 @@ export default function SuperadminPage() {
                 </thead>
                 <tbody>
                   {(overview?.topOrgsByBeneficiaries ?? []).map((o) => (
-                    <tr key={o.id} className="border-b border-[var(--border)]/60 last:border-0">
+                    <tr
+                      key={o.id}
+                      onClick={() => router.push(`/admin/organizations/${o.id}`)}
+                      className="cursor-pointer border-b border-[var(--border)]/60 transition-colors last:border-0 hover:bg-[var(--accent)]/5"
+                    >
                       <td className="px-4 py-3">
                         <div className="font-medium text-[var(--navy)]">{o.name}</div>
                         <div className="text-[11px] text-gray-500">{o.country}</div>
